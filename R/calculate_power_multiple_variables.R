@@ -1,6 +1,9 @@
-#' This function uses simulation to perform power analysis. It is designed to explore the power of biological experiments and to suggest an optimal number of experimental variables
-#' with reasonable power. The backbone of the function is based on simr package, which fits a fixed effect or mixed effect model based on the observed data and simulates response
-#' variables. Users can test the power of different combinations of experimental variables and parameters.
+#' @title calculate_power_multiple_variables
+#'
+#'
+#' @description This function uses simulation to perform power analysis. It is designed to explore the power of biological experiments and to suggest an optimal number of experimental variables
+#' @description with reasonable power. The backbone of the function is based on simr package, which fits a fixed effect or mixed effect model based on the observed data and simulates response
+#' @description variables. Users can test the power of different combinations of experimental variables and parameters.
 #'
 #' Note: The current version does not accept categorical response variables, sample size parameters smaller than the observed samples size
 #'
@@ -10,25 +13,25 @@
 #' @import lmerTest
 #' @import readxl
 #'
-#' @param power_curve: 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level (default).
-#' @param data: Input data
-#' @param variance_estimate_from: "data" (defalut) or "ICC". "data": If variances should be calculated from the input data. "ICC": User should provide Intra-Class Coefficients (ICC) in addition to observed data
-#' @param condition_variable : Name of the condition varaible (ex variable with values such as control/case). The input file has to have a corresponding column name
-#' @param experimental_variable : Name of the varaibles related to experimental desgin such as "experiment", "plate", and "cell_line".
-#' @param response_variable : Name of the variable observed by performing the experiment. ex) intensity.
-#' @param categorical_condition_variable: Specify whether the condition variable is categorical. 1: Categorical (default), 0: Continuous.
-#' @param categorical_response_variable: Default: the observed variable is continous. Categorical response variable will be implemented in the future. 1: Categorical , 0: Continuous (default).
-#' @param nsim: The number of simulations to run. Default=1000
-#' @param  output: Output file name
+#' @param power_curve 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level (default).
+#' @param data Input data
+#' @param variance_estimate_from "data" (defalut) or "ICC". "data": If variances should be calculated from the input data. "ICC": User should provide Intra-Class Coefficients (ICC) in addition to observed data
+#' @param condition_variable Name of the condition varaible (ex variable with values such as control/case). The input file has to have a corresponding column name
+#' @param experimental_variable Name of the varaibles related to experimental desgin such as "experiment", "plate", and "cell_line".
+#' @param response_variable Name of the variable observed by performing the experiment. ex) intensity.
+#' @param categorical_condition_variable Specify whether the condition variable is categorical. 1: Categorical (default), 0: Continuous.
+#' @param categorical_response_variable Default: the observed variable is continous. Categorical response variable will be implemented in the future. 1: Categorical , 0: Continuous (default).
+#' @param nsim The number of simulations to run. Default=1000
+#' @param output Output file name
 ##### If power_curve = 1
-#' @param  target_parameter: Name of the experimental parameter to use for the power calculation.
-#' @param  levels: 1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_parameter = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).
-#' @param  max_size: Maximum levels or sample sizes to test. Default: the current level or the current sample size x 5. ex) If max_levels = c(10,5), it will test upto 10 experiments and 5 cell lines.
-#' @param  breaks: Levels /sample sizes of the variable to be specified along the power curve.. Default: max(1, round( the number of current levels / 5 ))
+#' @param  target_parameter Name of the experimental parameter to use for the power calculation.
+#' @param  levels 1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_parameter = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).
+#' @param  max_size Maximum levels or sample sizes to test. Default: the current level or the current sample size x 5. ex) If max_levels = c(10,5), it will test upto 10 experiments and 5 cell lines.
+#' @param  breaks Levels /sample sizes of the variable to be specified along the power curve.. Default: max(1, round( the number of current levels / 5 ))
 ##### If variance_estimate_from = "data"
-#' @param  effect_size: If you know the effect size of your condition variable, provided it. If the effect size is not provided, it will be estimated from your data
+#' @param  effect_size If you know the effect size of your condition variable, provided it. If the effect size is not provided, it will be estimated from your data
 ##### If variance_estimate_from = "varaince"
-#' @param  ICC: Intra-Class Coefficients (ICC) for each parameter
+#' @param  ICC Intra-Class Coefficients (ICC) for each parameter
 #' @return A power curve image or a power calculation result printed in a text file
 #'
 #' @export
