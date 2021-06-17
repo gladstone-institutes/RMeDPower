@@ -1,1 +1,1 @@
-# calPower
+# calcPower

@@ -1,4 +1,4 @@
-Package: calPower
+Package: calcPower
 Type: Package
 Title: Power Calculation for biological experiments
 Version: 0.1.0
@@ -9,7 +9,13 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
+Imports:
+    simr,
+    lmerTest,
+    lme4
 Suggests: 
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
