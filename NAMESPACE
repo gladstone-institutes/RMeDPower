@@ -3,6 +3,4 @@
 export(calculate_power)
 import(lme4)
 import(lmerTest)
-import(multtest)
-import(readxl)
 import(simr)
