@@ -66,8 +66,7 @@ calculate_power(data=calcPower_data1,power_curve=1,
 
 #### \* levels = 1: to explore different levels of the target parameter
 
-![Ex1
-result](/Users/mingyoungshin/Dropbox%20\(Gladstone\)/BC-JK-1072/ex1.jpeg)
+![Ex1 result](ex1.jpeg)
 
 ### Ex2) Varaince estimation and power calculation from pilot data. Sample sizes will be increased to max(observed sample size)x5
 
@@ -93,8 +92,7 @@ calculate_power(data=calcPower_data1,power_curve=1,
 
 ##### \* levels = 0 : to explore different sample sizes of the target parameter
 
-![Ex2
-result](/Users/mingyoungshin/Dropbox%20\(Gladstone\)/BC-JK-1072/ex2.jpeg)
+![Ex2 result](ex2.jpeg)
 
 ### Ex3) Varaince estimation and power calculation (for a single level size) from pilot data with user determined level count and output file name
 
@@ -175,10 +173,8 @@ calculate_power(data=calcPower_data1,power_curve=1,
                  nsimn=10, target_parameters=c("experiment","line"), levels=c(1,0), max_size=c(9,142))  
 ```
 
-![Ex5-1
-result](/Users/mingyoungshin/Dropbox%20\(Gladstone\)/BC-JK-1072/ex5-1.jpeg)  
-![Ex5-2
-result](/Users/mingyoungshin/Dropbox%20\(Gladstone\)/BC-JK-1072/ex5-2.jpeg)
+![Ex5-1 result](ex5-1.jpeg)  
+![Ex5-2 result](ex5-2.jpeg)
 
 ### Ex6) Varaince estimation and power curve plot from pilot data with single category
 
@@ -210,5 +206,4 @@ calculate_power(data=calcPower_data2,power_curve=1,
                  nsimn=10, target_parameters=c("experiment"), levels=1, ICC=c(0.2,0.15,0.3))  
 ```
 
-![Ex8
-result](/Users/mingyoungshin/Dropbox%20\(Gladstone\)/BC-JK-1072/ex8.jpeg)
+![Ex8 result](ex8.jpeg)
