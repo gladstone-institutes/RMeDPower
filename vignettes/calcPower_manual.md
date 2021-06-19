@@ -6,19 +6,19 @@ calcPower\_tutorial
 This function uses simulation to perform power analysis. It is designed
 to explore the power of biological experiments and to suggest an optimal
 number of experimental variables with reasonable power. The backbone of
-the function is based on simr package, which fits a fixed effect or
+the function is based on `simr` package, which fits a fixed effect or
 mixed effect model based on the observed data and simulates response
 variables. Users can test the power of different combinations of
 experimental variables and parameters.
 
 ## Installation
-
+Install the `calcPower` package from GitHub using the following:
 ``` r
 library(devtools)
 install_github('gladstone-institutes/calcPower', build_vignettes=TRUE)
 ```
 
-#### First few lines of the input data
+A sample dataset is provided with the package. View the first few lines of this dataset:
 
 ``` r
 head(calcPower_data1)
@@ -55,27 +55,20 @@ calculate_power(data=calcPower_data1,power_curve=1,
                  nsimn=10, target_parameters="experiment", levels=1)  
 ```
 
-##### \* power\_curve=1 : to get a power curve that calculates power for different levels of the target parameter
-
-##### \* variance\_estimate\_from =“data” : to estimate variance values from the input data
-
-##### \* condition\_variable : cell status variable (ex control/case)
-
-##### \* experimental\_variable : variables related to the experimental design
-
-##### \* response\_varaible: phenotype
-
-##### \* nsimn=10 : 10 iterations for power calculation ( try at least 100 or 1000 to get high accuracy)
-
-##### \* target\_parameters=“experiment” : to explore “experiment”
-
-##### \* levels = 1: to explore different levels of the target parameter
+ * power\_curve=1 : to get a power curve that calculates power for different levels of the target parameter
+ * variance\_estimate\_from =“data” : to estimate variance values from the input data
+ * condition\_variable : cell status variable (ex control/case)
+ * experimental\_variable : variables related to the experimental design
+ * response\_varaible: phenotype
+ * nsimn=10 : 10 iterations for power calculation ( try at least 100 or 1000 to get high accuracy)
+ * target\_parameters=“experiment” : to explore “experiment”
+ * levels = 1: to explore different levels of the target parameter
 
 ![Ex1 result](ex1.jpeg)
 
 ## Ex2. Varaince estimation and power calculation from pilot data
 
-##### Sample sizes will be increased to max(observed sample size)x5. For example, when there are max 71 samples per cell line in the original data:
+Sample sizes will be increased to max(observed sample size)x5. For example, when there are max 71 samples per cell line in the original data:
 
 ``` r
 table(calcPower_data1$line)
@@ -84,9 +77,9 @@ table(calcPower_data1$line)
 #>    42    40    37    51    71    37    42    20
 ```
 
-##### and we will test max 71 x 5 samples per cell line
+and we will test max 71 x 5 samples per cell line
 
-#### code example:
+code example:
 
 ``` r
 calculate_power(data=calcPower_data1,power_curve=1,
@@ -95,15 +88,15 @@ calculate_power(data=calcPower_data1,power_curve=1,
                  nsimn=10, target_parameters="line", levels=0)  
 ```
 
-###### \* levels = 0 : to explore different sample sizes of the target parameter
+ * levels = 0 : to explore different sample sizes of the target parameter
 
 ![Ex2 result](ex2.jpeg)
 
 ## Ex3. User determined level count and output file name
 
-##### Varaince estimation and power calculation (for a single level size) from pilot data with user determined level count and output file name. We will do Ex1 with max level size 15
+Varaince estimation and power calculation (for a single level size) from pilot data with user determined level count and output file name. We will do Ex1 with max level size 15
 
-#### code example:\`
+code example:\`
 
 ``` r
 calculate_power(data=calcPower_data1,power_curve=0,
@@ -112,13 +105,11 @@ calculate_power(data=calcPower_data1,power_curve=0,
                  nsimn=10, target_parameters="experiment", levels=1, max_size=15,output="test.txt")  
 ```
 
-##### \* power\_curve = 0 : to get the power for a single level of the target parameter
+ * power\_curve = 0 : to get the power for a single level of the target parameter
+ * max\_size = 15 : to calculate power for the case when the target parameter has 15 levels (levels=1 therefore it will test levels not sample sizes)
+ * output : to assign a name to the output file
 
-##### \* max\_size = 15 : to calculate power for the case when the target parameter has 15 levels (levels=1 therefore it will test levels not sample sizes)
-
-##### \* output : to assign a name to the output file
-
-##### Result:
+#### Result:
 
 <p class="comment">
 
@@ -138,9 +129,9 @@ nb: result might be an observed power calculation
 
 ## Ex4. User determined effect size
 
-#### Varaince estimation and power calculation from pilot data with user determined effect size of the condition variable
+Varaince estimation and power calculation from pilot data with user determined effect size of the condition variable
 
-#### code example:
+code example:
 
 ``` r
 calculate_power(data=calcPower_data1,power_curve=0,
@@ -149,7 +140,7 @@ calculate_power(data=calcPower_data1,power_curve=0,
                  nsimn=10, target_parameters="experiment", levels=1, effect_size = c(10))  
 ```
 
-##### \* effect\_size = 10 : to assign 10 to the effect size of condition\_variable when the reesponse variable is “feature1”
+ * effect\_size = 10 : to assign 10 to the effect size of condition\_variable when the reesponse variable is “feature1”
 
 ##### Result:
 
@@ -169,9 +160,9 @@ Time elapsed: 0 h 0 m 10 s
 
 ## Ex5. Test two target parameters
 
-#### Varaince estimation and power calculation from pilot data for two target parameters: Increase the number of levels of the first target parmeter and sample sizes of the second target parameter. We will test max 9 experiments and max 142 samples per cell line. There will be two results for each parameter
+Varaince estimation and power calculation from pilot data for two target parameters: Increase the number of levels of the first target parmeter and sample sizes of the second target parameter. We will test max 9 experiments and max 142 samples per cell line. There will be two results for each parameter
 
-#### code example:
+code example:
 
 ``` r
 calculate_power(data=calcPower_data1,power_curve=1,
@@ -185,9 +176,9 @@ calculate_power(data=calcPower_data1,power_curve=1,
 
 ## Ex6. Data with a single experimental category
 
-#### If the pilot data only has a single experimental category for ‘experiment’,‘plat’ or’line’, we use known ICC values from other data.
+If the pilot data only has a single experimental category for ‘experiment’,‘plat’ or’line’, we use known ICC values from other data.
 
-#### code example:
+code example:
 
 Check sample size table of experimental varaibles:
 
