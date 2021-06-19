@@ -8,11 +8,6 @@ vignette: >
 ---
 
 
-<style type="text/css">
-  body{
-  font-size: 16pt;
-}
-</style>
 
 
 ```{r, include = FALSE}

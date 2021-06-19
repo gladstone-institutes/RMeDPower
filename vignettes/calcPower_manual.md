@@ -1,12 +1,6 @@
 calcPower\_tutorial
 ================
 
-<style type="text/css">
-  body{
-  font-size: 16pt;
-}
-</style>
-
 ## Introduction
 
 This function uses simulation to perform power analysis. It is designed
