@@ -18,7 +18,7 @@ library(devtools)
 install_github('gladstone-institutes/calcPower', build_vignettes=TRUE)
 ```
 
-A sample dataset is provided with the package. View the first few lines of this dataset:
+A sample dataset is provided with the package. The examples below use this dataset and its particular column names as parameters. View the first few lines of this dataset:
 
 ``` r
 head(calcPower_data1)
@@ -38,6 +38,20 @@ head(calcPower_data1)
 #> 6       11
 ```
 
+## Function parameters
+The `calculate_power` function has nine parameters, defined as follows:
+
+ * data: (dataframe) the dataset to base the simulation upon 
+ * power\_curve: (0 or 1) to get a power curve that calculates power for different levels of the target parameter. Default is 0.
+ * variance\_estimate\_from: (“data” or "ICC") to estimate variance values from the input data. Default is "data".
+ * condition\_variable: (column name) cell status variable (e.g., control or case) coded as 0 or 1
+ * experimental\_variable: (list of column names) variables related to the experimental design
+ * response\_varaible: (column name) phenotype values
+ * nsimn: (integer) number of iterations for power calculation (default is 1000 for high accuracy)
+ * target\_parameters:  (column name) variable to estimate
+ * levels: (integer) nubmer of levels of the target parameter to explore. 
+
+
 ## Ex1. Varaince estimation and power calculation from pilot data
 
 ##### Levels will be increased to max(observed level)x5. For example, there are 9 experiments in the original data:
@@ -54,15 +68,6 @@ calculate_power(data=calcPower_data1,power_curve=1,
                  experimental_variable=c("experiment","plate","line"), response_variable="feature1",
                  nsimn=10, target_parameters="experiment", levels=1)  
 ```
-
- * power\_curve=1 : to get a power curve that calculates power for different levels of the target parameter
- * variance\_estimate\_from =“data” : to estimate variance values from the input data
- * condition\_variable : cell status variable (ex control/case)
- * experimental\_variable : variables related to the experimental design
- * response\_varaible: phenotype
- * nsimn=10 : 10 iterations for power calculation ( try at least 100 or 1000 to get high accuracy)
- * target\_parameters=“experiment” : to explore “experiment”
- * levels = 1: to explore different levels of the target parameter
 
 ![Ex1 result](ex1.jpeg)
 
