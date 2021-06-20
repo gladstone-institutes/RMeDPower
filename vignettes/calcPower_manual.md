@@ -52,7 +52,7 @@ The `calculate_power` function has nine parameters, defined as follows:
  * levels: (integer) nubmer of levels of the target parameter to explore. 
 
 
-## Ex1. Varaince estimation and power calculation from pilot data
+## Ex1. Testing different levels of an experimental variable
 
 ##### Levels will be increased to max(observed level)x5. For example, there are 9 experiments in the original data:
 
@@ -71,7 +71,7 @@ calculate_power(data=calcPower_data1,power_curve=1,
 
 ![Ex1 result](ex1.jpeg)
 
-## Ex2. Varaince estimation and power calculation from pilot data
+## Ex2. Testing different sample sizes of an experimental variable
 
 Sample sizes will be increased to max(observed sample size)x5. For example, when there are max 71 samples per cell line in the original data:
 
