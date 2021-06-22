@@ -40,9 +40,9 @@
 #' variance_estimate_from="data",condition_variable="classification",
 #' experimental_variable=c("experiment","plate","line"), response_variable="edge.detection",
 #' nsimn=10, target_parameters="experiment", levels=1)
-calculate_power <- function(data,power_curve=0,variance_estimate_from="data",condition_variable, experimental_variable, response_variable,
-                            categorical_condition_variable=1, categorical_response_variable=0, nsimn=1000,
-                            target_parameters, levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, output=NULL){
+calculate_power <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical,
+                            response_is_categorical=FALSE, nsimn=1000, variance_estimate_from="data": maybe remove,
+                            levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, output=NULL){
 
 
 
