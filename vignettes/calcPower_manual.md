@@ -199,10 +199,7 @@ Out power simulations depend on the variance components estimated from the input
 ![](ICC.png)  
 
 where V_i represents the standard deviation of the experimental variable i and epsilon represents the standard deviation of the error.
-
-
-code example:
-
+We will test this scenario using the example dataset with only single experiment and cell line:
 
 ``` r
 table(calcPower_data2$experiment,calcPower_data2$plate,calcPower_data2$line)
@@ -212,6 +209,11 @@ table(calcPower_data2$experiment,calcPower_data2$plate,calcPower_data2$line)
 #>         1
 #>   exp1 14
 ```
+
+
+code example:
+
+
 
 ``` r
 calculate_power(data=calcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
