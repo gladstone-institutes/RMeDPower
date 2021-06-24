@@ -18,7 +18,37 @@ library(devtools)
 install_github('gladstone-institutes/calcPower', build_vignettes=TRUE)
 ```
 
-A sample dataset is provided with the package. The examples below use this dataset and its particular column names as parameters. View the first few lines of this dataset:
+
+## Function parameters
+The `calculate_power` function has fifteen parameters, defined as follows:
+
+ * data: (dataframe) the dataset to base the simulation upon 
+ * condition\_column: (column name) cell status variable (e.g., control or case) 
+ * experimental\_columns: (list of column names) variables related to the experimental design
+ * response\_column: (column name) phenotype values
+ * target\columns:  (column name) variable to estimate
+ * power\_curve: (0 or 1) to get a power curve that calculates power for different levels of the target parameter => 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.
+ * condition_is_categorical: Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
+ * response_is_categorical: Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
+ * nsimn: (integer) number of iterations for power calculation (default is 1000 for high accuracy)
+ * levels: (integer) nubmer of levels of the target parameter to explore. => 1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_columns = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).
+ * max_size: Maximum levels or sample sizes to test. Default: the current level or the current sample size x 5. ex) If max_levels = c(10,5), it will test upto 10 experiments and 5 cell lines.
+ * breaks: Levels /sample sizes of the variable to be specified along the power curve.. Default: max(1, round( the number of current levels / 5 ))
+ * effect_size: If you know the effect size of your condition variable, provided it. If the effect size is not provided, it will be estimated from your data
+ * ICC: Intra-Class Coefficients (ICC) for each parameter
+ * output: Output file name
+ 
+
+
+## Ex1. Testing different levels of an experimental variable
+
+
+
+Consider the situation in which nine independent experiments were performed to find an association between cell state and "feature1". Now we want to test the optimal number of experiments to obtain reasonable power to detect association. We will simulate the response variable (feature1) to estimate the relationship between number of experiments and power using existing experimental data. Since each experiment is independent of each other, '1' is assigned to the parameter 'level' to simulate independent experiments. If we don't specify 'max_size', level of experiments will tested upto max (observation level) x5. For example, the original data has nine experiments:
+
+exp1, exp2, exp3, …, exp9
+
+The simulation extends the experiment to 'exp45'. Example data 'calcPower_data1' is included in the package and the first few lines of this dataset are:
 
 ``` r
 head(calcPower_data1)
@@ -38,42 +68,23 @@ head(calcPower_data1)
 #> 6       11
 ```
 
-## Function parameters
-The `calculate_power` function has nine parameters, defined as follows:
 
- * data: (dataframe) the dataset to base the simulation upon 
- * power\_curve: (0 or 1) to get a power curve that calculates power for different levels of the target parameter. Default is 0.
- * variance\_estimate\_from: (“data” or "ICC") to estimate variance values from the input data. Default is "data".
- * condition\_variable: (column name) cell status variable (e.g., control or case) coded as 0 or 1
- * experimental\_variable: (list of column names) variables related to the experimental design
- * response\_varaible: (column name) phenotype values
- * nsimn: (integer) number of iterations for power calculation (default is 1000 for high accuracy)
- * target\_parameters:  (column name) variable to estimate
- * levels: (integer) nubmer of levels of the target parameter to explore. 
+The example dataset consists of three experimental variables: "experiment", "plate" and "line", which should be assigned to 'experiment_columns'. Since we will be testing several experimental levels, we assign '1' to 'power_curve' to indicate that we want to create a power trend curve. 'condition_is_categorical' is TRUE as it is binary and this tutorial only runs 10 simulations to reduce computation time. It is recommended to use 100 to 1000 simulations for reproducible results.
 
-
-## Ex1. Testing different levels of an experimental variable
-
-##### Levels will be increased to max(observed level)x5. For example, there are 9 experiments in the original data:
-
-exp1, exp2, exp3, …, exp9
-
-##### and we will test 9 x 5 experiments
 
 #### code example:
 
 ``` r
-calculate_power(data=calcPower_data1,power_curve=1,
-                 variance_estimate_from="data",condition_variable="classification",
-                 experimental_variable=c("experiment","plate","line"), response_variable="feature1",
-                 nsimn=10, target_parameters="experiment", levels=1)  
+calculate_power(data=calcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+                response_column="feature1", target_columns="experiment", power_curve=1, condition_is_categorical=TRUE,
+                nsimn=10, levels=1) 
 ```
 
 ![Ex1 result](ex1.jpeg)
 
 ## Ex2. Testing different sample sizes of an experimental variable
 
-Sample sizes will be increased to max(observed sample size)x5. For example, when there are max 71 samples per cell line in the original data:
+Let us now consider the scenario where we want to estimate the power to detect an association between 'feature1' and cell conditions by changing the number of cells in each cell line. The example data set has the following number of cells for each cell line:
 
 ``` r
 table(calcPower_data1$line)
@@ -82,43 +93,42 @@ table(calcPower_data1$line)
 #>    42    40    37    51    71    37    42    20
 ```
 
-and we will test max 71 x 5 samples per cell line
+
+We will test up to 71 x 5 cells per cell line using default settings. The other parameter settings are the same except for 'target_columns' where we input 'line' and 'levels' we assign '0' to because we are simulating multiple cells in the same cell line.
+
 
 code example:
 
 ``` r
-calculate_power(data=calcPower_data1,power_curve=1,
-                 variance_estimate_from="data",condition_variable="classification",
-                 experimental_variable=c("experiment","plate","line"), response_variable="feature1",
-                 nsimn=10, target_parameters="line", levels=0)  
+calculate_power(data=calcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+                  response_column="feature1", target_columns="line", power_curve=1, condition_is_categorical=TRUE,
+                  nsimn=10, levels=0) 
 ```
 
- * levels = 0 : to explore different sample sizes of the target parameter
+
 
 ![Ex2 result](ex2.jpeg)
 
 ## Ex3. User determined level count and output file name
 
-Varaince estimation and power calculation (for a single level size) from pilot data with user determined level count and output file name. We will do Ex1 with max level size 15
+Now instead of creating a power trend curve for multiple levels, we will test a specific number of independent experiments. We can achieve this by assigning '0' to 'pwoer_curve'. Test the case with 15 experiments by assigning '15' to 'max_size'. The function will output the estimated power for the given level. Assign 'test.txt' to 'output' to output the result. If we do not specify an output file name, the result is output to a file created using the current time as the suffix.
+
 
 code example:\`
 
 ``` r
-calculate_power(data=calcPower_data1,power_curve=0,
-                 variance_estimate_from="data",condition_variable="classification",
-                 experimental_variable=c("experiment","plate","line"), response_variable="feature1",
-                 nsimn=10, target_parameters="experiment", levels=1, max_size=15,output="test.txt")  
+calculate_power(data=calcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+                response_column="feature1", target_columns="experiment", power_curve=0, condition_is_categorical=TRUE,
+                nsimn=10, levels=1, max_size=15, output="test.txt") 
 ```
 
- * power\_curve = 0 : to get the power for a single level of the target parameter
- * max\_size = 15 : to calculate power for the case when the target parameter has 15 levels (levels=1 therefore it will test levels not sample sizes)
- * output : to assign a name to the output file
+
 
 #### Result:
 
 <p class="comment">
 
-Power for predictor ‘condition\_variable’, (95% confidence interval):  
+Power for predictor ‘condition\_column’, (95% confidence interval):  
 80.00% (44.39, 97.48)  
   
 Test: Likelihood ratio  
@@ -132,26 +142,27 @@ nb: result might be an observed power calculation
 
 </p>
 
+
+
 ## Ex4. User determined effect size
 
-Varaince estimation and power calculation from pilot data with user determined effect size of the condition variable
+Now we will estimate the power with the given effect size of the cell condition for feature1. We will assume an effect size of 10 and assign the value to the 'effect_size' parameter. Let's use the default max_size setting and the output file setting.
+
 
 code example:
 
 ``` r
-calculate_power(data=calcPower_data1,power_curve=0,
-                 variance_estimate_from="data",condition_variable="classification",
-                 experimental_variable=c("experiment","plate","line"), response_variable="feature1",
-                 nsimn=10, target_parameters="experiment", levels=1, effect_size = c(10))  
+calculate_power(data=calcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+                response_column="feature1", target_columns="experiment", power_curve=0, condition_is_categorical=TRUE,
+                nsimn=10, levels=1, effect_size = c(10)) 
 ```
 
- * effect\_size = 10 : to assign 10 to the effect size of condition\_variable when the reesponse variable is “feature1”
 
 ##### Result:
 
 <p class="comment">
 
-Power for predictor ‘condition\_variable’, (95% confidence interval):  
+Power for predictor ‘condition\_column’, (95% confidence interval):  
 50.00% (18.71, 81.29)  
   
 Test: Likelihood ratio  
@@ -165,27 +176,33 @@ Time elapsed: 0 h 0 m 10 s
 
 ## Ex5. Test two target parameters
 
-Varaince estimation and power calculation from pilot data for two target parameters: Increase the number of levels of the first target parmeter and sample sizes of the second target parameter. We will test max 9 experiments and max 142 samples per cell line. There will be two results for each parameter
+You can test more than one parameter for a single run. Suppose we are estimating power for two target parameters: experiment and cell line. We will test up to 9 experiments and up to 142 samples per cell line. The function will return two power curves for each target parameter.
+
 
 code example:
 
 ``` r
-calculate_power(data=calcPower_data1,power_curve=1,
-                 variance_estimate_from="data",condition_variable="classification",
-                 experimental_variable=c("experiment","plate","line"), response_variable="feature2",
-                 nsimn=10, target_parameters=c("experiment","line"), levels=c(1,0), max_size=c(9,142))  
+calculate_power(data=calcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+                response_column="feature2", target_columns=c("experiment","line"), power_curve=1, condition_is_categorical=TRUE,
+                nsimn=10, levels=c(1,0), max_size=c(9,142) )
 ```
 
 ![Ex5-1 result](ex5-1.jpeg)  
 ![Ex5-2 result](ex5-2.jpeg)
 
+
+
 ## Ex6. Data with a single experimental category
 
-If the pilot data only has a single experimental category for ‘experiment’,‘plat’ or’line’, we use known ICC values from other data.
+Out power simulations depend on the variance components estimated from the input data set. However, there may not be enough data to estimate the variance component. For example, the pilot data might have only a single category for 'experiment', 'flat' or 'line'. Then we need to provide the ICC values estimated from another data set. ICC can be estimated by taking the ratio between the variance estimates using the following formula:
+
+![](ICC.png)  
+
+where V_i represents the standard deviation of the experimental variable i and epsilon represents the standard deviation of the error.
+
 
 code example:
 
-Check sample size table of experimental varaibles:
 
 ``` r
 table(calcPower_data2$experiment,calcPower_data2$plate,calcPower_data2$line)
@@ -197,10 +214,9 @@ table(calcPower_data2$experiment,calcPower_data2$plate,calcPower_data2$line)
 ```
 
 ``` r
-calculate_power(data=calcPower_data2,power_curve=1,
-                 variance_estimate_from="ICC",condition_variable="classification",
-                 experimental_variable=c("experiment","plate","line"), response_variable="feature2",
-                 nsimn=10, target_parameters=c("experiment"), levels=1, ICC=c(0.2,0.15,0.3))  
+calculate_power(data=calcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+                response_column="feature2", target_columns=c("experiment"), power_curve=1, condition_is_categorical=TRUE,
+                nsimn=10, levels=c(1),  ICC=c(0.2,0.15,0.3))  
 ```
 
 ![Ex8 result](ex8.jpeg)
