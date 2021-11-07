@@ -1,0 +1,11 @@
+Power for predictor 'condition_variable', (95% confidence interval):
+      80.00% (44.39, 97.48)
+
+Test: Likelihood ratio
+
+Based on 10 simulations, (0 warnings, 0 errors)
+alpha = 0.05, nrow = 634
+
+Time elapsed: 0 h 0 m 4 s
+
+nb: result might be an observed power calculation
