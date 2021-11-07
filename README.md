@@ -4,8 +4,8 @@
 ```
 install.packages("devtools")
 library(devtools)
-install_github('gladstone-institutes/calcPower', build_vignettes=TRUE)
-library(calcPower)
+install_github('gladstone-institutes/CalcPower', build_vignettes=TRUE)
+library(CalcPower)
 ```
 
 ## Functions
