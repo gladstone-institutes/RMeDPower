@@ -6,15 +6,14 @@
 \usage{
 calculate_power(
   data,
-  power_curve = 0,
-  variance_estimate_from = "data",
-  condition_variable,
-  experimental_variable,
-  response_variable,
-  categorical_condition_variable = 1,
-  categorical_response_variable = 0,
+  condition_column,
+  experimental_columns,
+  response_column,
+  target_columns,
+  power_curve,
+  condition_is_categorical,
+  response_is_categorical = FALSE,
   nsimn = 1000,
-  target_parameters,
   levels = NULL,
   max_size = NULL,
   breaks = NULL,
@@ -26,21 +25,21 @@ calculate_power(
 \arguments{
 \item{data}{Input data}
 
-\item{power_curve}{1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level (default).}
+\item{condition_column}{Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name}
 
-\item{variance_estimate_from}{"data" (defalut) or "ICC". "data": If variances should be calculated from the input data. "ICC": User should provide Intra-Class Coefficients (ICC) in addition to observed data}
+\item{experimental_columns}{Name of the variable related to experimental design such as "experiment", "plate", and "cell_line".}
 
-\item{condition_variable}{Name of the condition varaible (ex variable with values such as control/case). The input file has to have a corresponding column name}
+\item{response_column}{Name of the variable observed by performing the experiment. ex) intensity.}
 
-\item{experimental_variable}{Name of the varaibles related to experimental desgin such as "experiment", "plate", and "cell_line".}
+\item{target_columns}{Name of the experimental parameters to use for the power calculation.}
 
-\item{response_variable}{Name of the variable observed by performing the experiment. ex) intensity.}
+\item{power_curve}{1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.}
 
-\item{categorical_condition_variable}{Specify whether the condition variable is categorical. 1: Categorical (default), 0: Continuous.}
+\item{condition_is_categorical}{Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.}
 
-\item{categorical_response_variable}{Default: the observed variable is continous. Categorical response variable will be implemented in the future. 1: Categorical , 0: Continuous (default).}
+\item{response_is_categorical}{Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).}
 
-\item{levels}{1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_parameter = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).}
+\item{levels}{1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_columns = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).}
 
 \item{max_size}{Maximum levels or sample sizes to test. Default: the current level or the current sample size x 5. ex) If max_levels = c(10,5), it will test upto 10 experiments and 5 cell lines.}
 
@@ -53,8 +52,6 @@ calculate_power(
 \item{output}{Output file name}
 
 \item{nsim}{The number of simulations to run. Default=1000}
-
-\item{target_parameter}{Name of the experimental parameter to use for the power calculation.}
 }
 \value{
 A power curve image or a power calculation result printed in a text file
@@ -67,10 +64,4 @@ with reasonable power. The backbone of the function is based on simr package, wh
 variables. Users can test the power of different combinations of experimental variables and parameters.
 
 Note: The current version does not accept categorical response variables, sample size parameters smaller than the observed samples size
-}
-\examples{
-calculate_power(power_curve=1,data=inputData,
-variance_estimate_from="data",condition_variable="classification",
-experimental_variable=c("experiment","plate","line"), response_variable="edge.detection",
-nsimn=10, target_parameters="experiment", levels=1)
 }
