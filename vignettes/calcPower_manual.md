@@ -15,7 +15,7 @@ experimental variables and parameters.
 Install the `calcPower` package from GitHub using the following:
 ``` r
 library(devtools)
-install_github('gladstone-institutes/calcPower', build_vignettes=TRUE)
+install_github('gladstone-institutes/CalcPower', build_vignettes=TRUE)
 ```
 
 
