@@ -6,6 +6,19 @@
 \usage{
 rename_experimental_variables(data, experimental_columns)
 }
+\arguments{
+\item{data}{Input data}
+
+\item{experimental_columns}{Name of the variable related to experimental design such as "experiment", "plate", and "cell_line".}
+}
+\value{
+Matrix with concatenated experimental variable names
+}
 \description{
-rename_experimental_variables
+This function concatenate experimental variable names to reflect the nested experimental structure. For example,
+
+for Cell-lineA exists in ExperimentI and ExperimentII, the concatenated name will be ExperimentI_Cell-lineA.
+}
+\examples{
+rename_experimental_variables(data, c("experiment","line"))
 }

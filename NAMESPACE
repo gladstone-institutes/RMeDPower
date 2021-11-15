@@ -2,7 +2,6 @@
 
 export(calculate_power)
 export(check_normality)
-export(paste_columns)
 export(rename_experimental_variables)
 export(transform_data)
 import(lme4)

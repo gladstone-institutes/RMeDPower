@@ -1,4 +1,4 @@
-calcPower\_tutorial
+CalcPower\_tutorial
 ================
 
 <style type="text/css">
@@ -21,7 +21,7 @@ experimental variables and parameters.
 
 ``` r
 library(devtools)
-install_github('gladstone-institutes/calcPower', build_vignettes=TRUE)
+install_github('gladstone-institutes/CalcPower', build_vignettes=TRUE)
 ```
 
 #### First few lines of the input data
@@ -77,7 +77,7 @@ calculate_power(data=calcPower_data1,power_curve=1,
 
 ##### \* levels = 1: to explore different levels of the target parameter
 
-![Ex1 result](/Users/mingyoungshin/git/calcPower/vignettes/ex1.jpeg)
+![Ex1 result](/Users/mingyoungshin/git/CalcPower/vignettes/ex1.jpeg)
 
 ## Ex2. Varaince estimation and power calculation from pilot data
 
@@ -103,7 +103,7 @@ calculate_power(data=calcPower_data1,power_curve=1,
 
 ###### \* levels = 0 : to explore different sample sizes of the target parameter
 
-![Ex2 result](/Users/mingyoungshin/git/calcPower/vignettes/ex2.jpeg)
+![Ex2 result](/Users/mingyoungshin/git/CalcPower/vignettes/ex2.jpeg)
 
 ## Ex3. User determined level count and output file name
 
@@ -187,8 +187,8 @@ calculate_power(data=calcPower_data1,power_curve=1,
 ```
 
 ![Ex5-1
-result](/Users/mingyoungshin/git/calcPower/vignettes/ex5-1.jpeg)  
-![Ex5-2 result](/Users/mingyoungshin/git/calcPower/vignettes/ex5-2.jpeg)
+result](/Users/mingyoungshin/git/CalcPower/vignettes/ex5-1.jpeg)  
+![Ex5-2 result](/Users/mingyoungshin/git/CalcPower/vignettes/ex5-2.jpeg)
 
 ## Ex6. Data with a single experimental category
 
@@ -214,4 +214,4 @@ calculate_power(data=calcPower_data2,power_curve=1,
                  nsimn=10, target_parameters=c("experiment"), levels=1, ICC=c(0.2,0.15,0.3))  
 ```
 
-![Ex8 result](/Users/mingyoungshin/git/calcPower/vignettes/ex8.jpeg)
+![Ex8 result](/Users/mingyoungshin/git/CalcPower/vignettes/ex8.jpeg)

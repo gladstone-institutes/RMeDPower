@@ -13,6 +13,29 @@ transform_data(
   response_is_categorical = FALSE
 )
 }
+\arguments{
+\item{data}{Input data}
+
+\item{condition_column}{Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name}
+
+\item{experimental_columns}{Name of the variable related to experimental design such as "experiment", "plate", and "cell_line".}
+
+\item{response_column}{Name of the variable observed by performing the experiment. ex) intensity.}
+
+\item{condition_is_categorical}{Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.}
+
+\item{response_is_categorical}{Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).}
+}
+\value{
+Quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values iii) raw residual values after removing outliers, and iv) log-transformed residual values
+}
 \description{
-transform_data
+This functions makes quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values
+
+iii) raw residual values after removing outliers, and iv) log-transformed residual values after removing outliers.
+
+To detect outliers, the function uses Rosner's test.
+}
+\examples{
+transform_data(data,"classif",c("experiment","line"),"feature1","TRUE")
 }

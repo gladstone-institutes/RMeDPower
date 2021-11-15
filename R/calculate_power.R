@@ -376,13 +376,14 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
     print(ps)
     cat("\n")
     if(length(output)!=0){
-      sink(output)
+      sink(paste0(output,".txt"))
+      print(ps)
+      sink()
     }else{
-      sink(paste("Power_curve_experiment_",target_columns[i],"_",Sys.Date(),".txt",sep=""))
+      print(ps)
     }
 
-    print(ps)
-    sink()
+
 
 
 
@@ -471,15 +472,15 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
 
       if(length(output)==0){
-        jpeg(paste("Power_curve_experiment_",target_columns[i],"_",Sys.Date(),".jpeg",sep=""))
+        plot(pc)
       }else{
-        jpeg(output[i])
+        png(paste0(output[i],".png"))
+        print(plot(pc))
+        print(mtext(response_column))
+        dev.off()
       }
 
-      print(plot(pc))
-      print(mtext(response_column))
-      dev.off()
-      plot(pc)
+
 
     }
 
