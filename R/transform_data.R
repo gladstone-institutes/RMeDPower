@@ -1,8 +1,6 @@
 #' @title transform_data
 #'
-#' @description This functions makes quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values
-#'  iii) raw residual values after removing outliers, and iv) log-transformed residual values after removing outliers.
-#'  To detect outliers, the function uses Rosner's test.
+#' @description This functions makes quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values iii) raw residual values after removing outliers, and iv) log-transformed residual values after removing outliers. To detect outliers, the function uses Rosner's test.
 #'
 #'
 #' @param data Input data

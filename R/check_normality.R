@@ -1,7 +1,6 @@
 #' @title check_normality
 #'
-#' @description This function makes a quantile-quantile (qq) plot of the residual values of the mixed effects model.
-#'  Users can check the normality of residual values by examining qqplot.
+#' @description This function makes a quantile-quantile (qq) plot of the residual values of the mixed effects model. Users can check the normality of residual values by examining qqplot.
 #'
 #'
 #' @param data Input data
@@ -10,7 +9,7 @@
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
-#'
+#' @param image_title title of the qq plot
 #'
 #' @return A quantile-quantile (qq) plot of residual values in a mixed-effects model
 #'
@@ -21,7 +20,7 @@
 
 
 check_normality<-function(data,condition_column, experimental_columns, response_column,  condition_is_categorical,
-                          response_is_categorical=FALSE){
+                          response_is_categorical=FALSE, image_title = NULL){
 
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
@@ -78,7 +77,7 @@ check_normality<-function(data,condition_column, experimental_columns, response_
   lmerFit_s=summary(lmerFit)
   ###QQ plot
 
-    qqnorm(lmerFit_s$residuals, ylab="Standardized Residuals", xlab="Normal Scores")
+    qqnorm(lmerFit_s$residuals, ylab="Standardized Residuals", xlab="Normal Scores", main=image_title)
     qqline(lmerFit_s$residuals)
 
 

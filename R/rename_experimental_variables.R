@@ -1,7 +1,6 @@
 #' @title rename_experimental_variables
 #'
-#' @description This function concatenate experimental variable names to reflect the nested experimental structure. For example,
-#'  for Cell-lineA exists in ExperimentI and ExperimentII, the concatenated name will be ExperimentI_Cell-lineA.
+#' @description This function concatenate experimental variable names to reflect the nested experimental structure. For example, for Cell-lineA exists in ExperimentI and ExperimentII, the concatenated name will be ExperimentI_Cell-lineA.
 #'
 #'
 #' @param data Input data
