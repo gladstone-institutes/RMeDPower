@@ -1,8 +1,8 @@
 #' @title transform_data
 #'
 #' @description This functions makes quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values
-#' @description iii) raw residual values after removing outliers, and iv) log-transformed residual values after removing outliers.
-#' @description To detect outliers, the function uses Rosner's test.
+#'  iii) raw residual values after removing outliers, and iv) log-transformed residual values after removing outliers.
+#'  To detect outliers, the function uses Rosner's test.
 #'
 #'
 #' @param data Input data
@@ -11,7 +11,7 @@
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
-#'
+#' @param alpha numeric scalar between 0 and 1 indicating the Type I error associated with the test of outliers
 #'
 #' @return Quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values iii) raw residual values after removing outliers, and iv) log-transformed residual values
 #'
@@ -22,7 +22,7 @@
 
 
 transform_data<-function(data,condition_column, experimental_columns, response_column, condition_is_categorical,
-                         response_is_categorical=FALSE){
+                         response_is_categorical=FALSE, alpha=0.05){
 
 
   data_updated=data
@@ -47,7 +47,7 @@ transform_data<-function(data,condition_column, experimental_columns, response_c
 
     ###rosner's test
     test <- EnvStats::rosnerTest(trait,
-                                 k = outlierC)
+                                 k = outlierC, alpha=alpha)
 
     outliers=test$all.stats$Value[test$all.stats$Outlier]
 
@@ -130,7 +130,7 @@ transform_data<-function(data,condition_column, experimental_columns, response_c
 
     ###rosner's test
     test <- EnvStats::rosnerTest(trait,
-                                 k = outlierC)
+                                 k = outlierC, alpha=alpha)
 
     if(length(test$all.stats$Outlier)>0 & !is.finite(test$all.stats$Outlier)){
       outliers=test$all.stats$Value[test$all.stats$Outlier]

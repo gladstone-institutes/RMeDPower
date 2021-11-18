@@ -1,7 +1,7 @@
 #' @title check_normality
 #'
 #' @description This function makes a quantile-quantile (qq) plot of the residual values of the mixed effects model.
-#' @description Users can check the normality of residual values by examining qqplot.
+#'  Users can check the normality of residual values by examining qqplot.
 #'
 #'
 #' @param data Input data
