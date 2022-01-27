@@ -13,7 +13,8 @@
 #'
 #' @param data Input data
 #' @param condition_column Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name
-#' @param experimental_columns Name of the variable related to experimental design such as "experiment", "plate", and "cell_line".
+#' @param experimental_columns Name of variables related to experimental design such as "experiment", "plate", and "cell_line".
+#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
 #' @param power_curve 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
@@ -33,7 +34,7 @@
 #' @export
 #' @examples
 
-calculate_power <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical,
+calculate_power <- function(data, condition_column, experimental_columns, repeatable_columns, response_column, target_columns, power_curve, condition_is_categorical,
                             response_is_categorical=FALSE, nsimn=1000,
                             levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, output=NULL){
 
@@ -47,6 +48,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   if(length(power_curve)==0 | !power_curve%in%c(0,1)){ print("power_curve must be 0 or 1");return(NULL) }
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
+  if(sum(repeatable_columns%in%colnames(data))!=length(repeatable_columns) ){ print("repeatable_columns must match column names");return(NULL) }
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
   if(response_is_categorical==TRUE){ print("response_is_categorical is TRUE. Categorical response variable is not accepted in the current version");return(NULL) }
   if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
@@ -78,10 +80,18 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   cat("\n")
 
 
+  nonrepeatable_columns=NULL
+
   for(i in 1:length(experimental_columns)){
     Data[,experimental_columns[i]]=as.factor(Data[,experimental_columns[i]])
     experimental_columns_index=c(experimental_columns_index,which(colnames(Data)==experimental_columns[i]))
     colnames(Data)[experimental_columns_index[i]]=paste("experimental_column",i,sep="")
+
+    if(i!=1&&!experimental_columns[i]%in%repeatable_columns){
+      nonrepeatable_columns=c(nonrepeatable_columns, paste("experimental_column",i,sep=""))
+    }
+
+
     cat("\n")
     print(paste("_________________________________",experimental_columns[i]," is assigned to experimental_column",i,sep=""))
     cat("\n")
@@ -366,6 +376,15 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
       }
 
     }
+
+
+    for(r in 2:length(experimental_columns)){
+      if(experimental_columns[r]%in%nonrepeatable_columns){
+        attributes(extended_target_columns)$newData[nonrepeatable_columns[r]]=paste(attributes(extended_target_columns)$newData[nonrepeatable_columns[r-1]],attributes(extended_target_columns)$newData[nonrepeatable_columns[r]],sep="_")
+      }
+    }
+    print(attributes(extended_target_columns)$newData)
+
     ###### power simulation
 
     ps=simr::powerSim(extended_target_columns, test=simr::fixed("condition_column"),nsim=nsimn)
@@ -454,14 +473,23 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
     }
 
+    for(r in 2:length(experimental_columns)){
+      if(experimental_columns[r]%in%nonrepeatable_columns){
+        attributes(extended_target_columns)$newData[nonrepeatable_columns[r]]=paste(attributes(extended_target_columns)$newData[nonrepeatable_columns[r-1]],
+                                                                                    attributes(extended_target_columns)$newData[nonrepeatable_columns[r]],sep="_")
+      }
+    }
+    print(attributes(extended_target_columns)$newData)
+
     ###### power curve simulation
     for(i in 1:length(target_columns)){
 
       if(levels[i]==1){
-        pc=simr::powerCurve(extended_target_columns[[i]], test=simr::fixed("condition_column"),along=target_columns_renamed[i], nsim=nsimn,
+
+          pc=simr::powerCurve(extended_target_columns[[i]], test=simr::fixed("condition_column"),along=target_columns_renamed[i], nsim=nsimn,
                             breaks=seq(1,max_size[i],breaks[i])   )
       }else{
-        pc=simr::powerCurve(extended_target_columns[[i]], test=simr::fixed("condition_column"),within=target_columns_renamed[i], nsim=nsimn,
+          pc=simr::powerCurve(extended_target_columns[[i]], test=simr::fixed("condition_column"),within=target_columns_renamed[i], nsim=nsimn,
                             breaks=seq(1,max_size[i],breaks[i])   )
       }
 
