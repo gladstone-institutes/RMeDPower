@@ -49,32 +49,36 @@ transform_data<-function(data,condition_column, experimental_columns, response_c
 
     outliers=test$all.stats$Value[test$all.stats$Outlier]
 
-    if(length(test$all.stats$Outlier) !=0 & !is.finite(test$all.stats$Outlier)){
-      cutoff=min( outliers[which(outliers>median(trait))] )
+    if(length(test$all.stats$Outlier) !=0  ){
+      if(! ( length(test$all.stats$Outlier) ==1 & is.infinite(test$all.stats$Outlier) ) ){
+
+        cutoff=min( outliers[which(outliers>median(trait))] )
 
 
-      ###plot the distribution and point the outlier boundary
-      hist(trait,breaks=1000, main=paste0("Histogram of raw ",response_column, " values and detected outliers" ) )
-      abline(v=cutoff,col="red")
+        ###plot the distribution and point the outlier boundary
+        hist(trait,breaks=1000, main=paste0("Histogram of raw ",response_column, " values and detected outliers" ) )
+        abline(v=cutoff,col="red")
 
-      mtext(paste0("Cutoff at ",cutoff),cex=1.2)
-
-
-      ############rosner's test end
+        mtext(paste0("Cutoff at ",cutoff),cex=1.2)
 
 
-      ########################from here, check qq after removing outliers
+        ############rosner's test end
 
 
-      data_noOutlier=data
-      data_noOutlier[data_noOutlier[,response_column]>cutoff,]=NA
-
-      data_updated=cbind(data_noOutlier[,response_column], data_updated)
-      colnames(data_updated)[1]=paste0(response_column,"_noOutlier")
+        ########################from here, check qq after removing outliers
 
 
-      check_normality(data_noOutlier,condition_column, experimental_columns, response_column,  condition_is_categorical,
-                      response_is_categorical=FALSE, image_title="QQplot (outlier excluded data)")
+        data_noOutlier=data
+        data_noOutlier[data_noOutlier[,response_column]>cutoff,]=NA
+
+        data_updated=cbind(data_noOutlier[,response_column], data_updated)
+        colnames(data_updated)[1]=paste0(response_column,"_noOutlier")
+
+
+        check_normality(data_noOutlier,condition_column, experimental_columns, response_column,  condition_is_categorical,
+                        response_is_categorical=FALSE, image_title="QQplot (outlier excluded data)")
+      }
+
 
 
     }else{
@@ -130,34 +134,34 @@ transform_data<-function(data,condition_column, experimental_columns, response_c
     test <- EnvStats::rosnerTest(trait,
                                  k = outlierC, alpha=alpha)
 
-    if(length(test$all.stats$Outlier)>0 & !is.finite(test$all.stats$Outlier)){
-      outliers=test$all.stats$Value[test$all.stats$Outlier]
-      cutoff=min( outliers[which(outliers>median(trait))] )
+    if(length(test$all.stats$Outlier)>0){
+      if(! ( length(test$all.stats$Outlier) ==1 & is.infinite(test$all.stats$Outlier) ) ){
+        outliers=test$all.stats$Value[test$all.stats$Outlier]
+        cutoff=min( outliers[which(outliers>median(trait))] )
 
 
-      ###plot the distribution and point the outlier boundary
-      hist(trait,breaks=1000, main=paste0("Histogram of log-transformed ",response_column, " values and detected outliers" ) )
-      abline(v=cutoff,col="red")
+        ###plot the distribution and point the outlier boundary
+        hist(trait,breaks=1000, main=paste0("Histogram of log-transformed ",response_column, " values and detected outliers" ) )
+        abline(v=cutoff,col="red")
 
-      mtext(paste0("Cutoff at ",cutoff),cex=1.2)
+        mtext(paste0("Cutoff at ",cutoff),cex=1.2)
 
-      ############rosner's test end
-
-
-      ########################from here, check qq after removing outliers
+        ############rosner's test end
 
 
-      data_log_noOutlier=data_log
-      data_log_noOutlier[data_log_noOutlier[,response_column]>cutoff,]=NA
-      data_updated=cbind(data_log_noOutlier[,response_column], data_updated)
-      colnames(data_updated)[1]=paste0(response_column,"_logTransformed_noOutlier")
-
-      ###qqplot
-      check_normality(data_log_noOutlier,condition_column, experimental_columns, response_column,  condition_is_categorical,
-                      response_is_categorical=FALSE, image_title="QQplot (log transformed & ouliter excluded data)")
+        ########################from here, check qq after removing outliers
 
 
+        data_log_noOutlier=data_log
+        data_log_noOutlier[data_log_noOutlier[,response_column]>cutoff,]=NA
+        data_updated=cbind(data_log_noOutlier[,response_column], data_updated)
+        colnames(data_updated)[1]=paste0(response_column,"_logTransformed_noOutlier")
 
+        ###qqplot
+        check_normality(data_log_noOutlier,condition_column, experimental_columns, response_column,  condition_is_categorical,
+                        response_is_categorical=FALSE, image_title="QQplot (log transformed & ouliter excluded data)")
+
+    }
 
     }else{
       print("No outlier detected from the log transformed data")
