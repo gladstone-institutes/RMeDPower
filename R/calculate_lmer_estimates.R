@@ -26,9 +26,9 @@
 
 calculate_lmer_estimates <- function(data, condition_column, experimental_columns, response_column, target_columns, condition_is_categorical,
                             response_is_categorical=FALSE, output=NULL){
-  
-  
-  
+
+
+
   ######input error handler
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
@@ -36,17 +36,17 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
   if(response_is_categorical==TRUE){ print("response_is_categorical is TRUE. Categorical response variable is not accepted in the current version");return(NULL) }
   if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
   if(sum(target_columns%in%colnames(data))!=length(target_columns) ){ print("target_columns must match column names");return(NULL) }
-  
-  
-  
+
+
+
   ####### remove empty lines
   Data <- data[complete.cases(data),]
-  
+
   cat("\n")
   print("__________________________________________________________________Summary of data:")
   print(summary(Data))
   cat("\n")
-  
+
   colnames_original=colnames(Data)
   experimental_columns_index=NULL
   ####### assign categorical variables
@@ -55,25 +55,25 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
     cat("\n")
     print("_________________________________Categorical response variable is not accepted in the current version")}
   cat("\n")
-  
-  
+
+
   for(i in 1:length(experimental_columns)){
     Data[,experimental_columns[i]]=as.factor(Data[,experimental_columns[i]])
     experimental_columns_index=c(experimental_columns_index,which(colnames(Data)==experimental_columns[i]))
     colnames(Data)[experimental_columns_index[i]]=paste("experimental_column",i,sep="")
-    
-    
+
+
     cat("\n")
     print(paste("_________________________________",experimental_columns[i]," is assigned to experimental_column",i,sep=""))
     cat("\n")
   }
-  
+
   colnames(Data)[which(colnames(Data)==condition_column)]="condition_column"
   colnames(Data)[which(colnames(Data)==response_column)]="response_column"
-  
-  
-  
-  
+
+
+
+
   ###### indices of target parameters in experimental variables
   target_i=NULL
   target_columns_renamed=NULL
@@ -81,38 +81,38 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
   for(i in 1:length(target_columns)){
     cn=colnames(Data)[which(colnames_original==target_columns[i])]
     target_columns_renamed[i]=cn
-    
+
     target_i=c(target_i,as.integer(substr(cn,nchar(cn),nchar(cn))))
   }
-  
-  
-  
-  
+
+
+
+
   ####### run the formula
-  
+
     if(length(experimental_columns)==1){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
     }else if(length(experimental_columns)==2){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
     }else if(length(experimental_columns)==3){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
     }else if(length(experimental_columns)==4){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
     }else if(length(experimental_columns)==5){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
     }
 
-  
-  
-  
-  
-  
+
+
+
+
+
   slmerFit <- summary(lmerFit)
   cat("\n")
   print("__________________________________________________________________Model statistics:")
   print(slmerFit)
   cat("\n")
-  
-  
+
+
 }
 
