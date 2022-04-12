@@ -15,9 +15,7 @@ rename_experimental_variables(data, experimental_columns)
 Matrix with concatenated experimental variable names
 }
 \description{
-This function concatenate experimental variable names to reflect the nested experimental structure. For example,
-
-for Cell-lineA exists in ExperimentI and ExperimentII, the concatenated name will be ExperimentI_Cell-lineA.
+This function concatenate experimental variable names to reflect the nested experimental structure. For example, for Cell-lineA exists in ExperimentI and ExperimentII, the concatenated name will be ExperimentI_Cell-lineA.
 }
 \examples{
 rename_experimental_variables(data, c("experiment","line"))

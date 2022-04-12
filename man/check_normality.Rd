@@ -10,7 +10,8 @@ check_normality(
   experimental_columns,
   response_column,
   condition_is_categorical,
-  response_is_categorical = FALSE
+  response_is_categorical = FALSE,
+  image_title = NULL
 )
 }
 \arguments{
@@ -25,15 +26,15 @@ check_normality(
 \item{condition_is_categorical}{Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.}
 
 \item{response_is_categorical}{Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).}
+
+\item{image_title}{title of the qq plot}
 }
 \value{
-A quantile-quantile (qq) plot of residual values in a mixed-effects model and optional figure saved in png
+A quantile-quantile (qq) plot of residual values in a mixed-effects model
 }
 \description{
-This function makes a quantile-quantile (qq) plot of the residual values of the mixed effects model.
-
-Users can check the normality of residual values by examining qqplot.
+This function makes a quantile-quantile (qq) plot of the residual values of the mixed effects model. Users can check the normality of residual values by examining qqplot.
 }
 \examples{
-check_normality(data,"classif",c("experiment","line"),"feature1","TRUE", output="feature1_qqplot")
+check_normality(data,"classif",c("experiment","line"),"feature1","TRUE")
 }

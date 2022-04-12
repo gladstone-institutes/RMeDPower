@@ -8,6 +8,7 @@ calculate_power(
   data,
   condition_column,
   experimental_columns,
+  repeatable_columns,
   response_column,
   target_columns,
   power_curve,
@@ -27,7 +28,9 @@ calculate_power(
 
 \item{condition_column}{Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name}
 
-\item{experimental_columns}{Name of the variable related to experimental design such as "experiment", "plate", and "cell_line".}
+\item{experimental_columns}{Name of variables related to experimental design such as "experiment", "plate", and "cell_line".}
+
+\item{repeatable_columns}{Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment}
 
 \item{response_column}{Name of the variable observed by performing the experiment. ex) intensity.}
 
@@ -57,11 +60,7 @@ calculate_power(
 A power curve image or a power calculation result printed in a text file
 }
 \description{
-This function uses simulation to perform power analysis. It is designed to explore the power of biological experiments and to suggest an optimal number of experimental variables
-
-with reasonable power. The backbone of the function is based on simr package, which fits a fixed effect or mixed effect model based on the observed data and simulates response
-
-variables. Users can test the power of different combinations of experimental variables and parameters.
+This function uses simulation to perform power analysis. It is designed to explore the power of biological experiments and to suggest an optimal number of experimental variables with reasonable power. The backbone of the function is based on simr package, which fits a fixed effect or mixed effect model based on the observed data and simulates response variables. Users can test the power of different combinations of experimental variables and parameters.
 
 Note: The current version does not accept categorical response variables, sample size parameters smaller than the observed samples size
 }
