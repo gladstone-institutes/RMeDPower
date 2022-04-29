@@ -99,6 +99,6 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
   print(slmerFit)
   cat("\n")
 
-
+  return(slmerFit)
 }
 
