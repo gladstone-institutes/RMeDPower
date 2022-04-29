@@ -17,14 +17,13 @@
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
-#' @param target_columns Name of the experimental parameters to use for the power calculation.
 #' @param output Output file name
 #' @return A linear mixed model result
 #'
 #' @export
 #' @examples
 
-calculate_lmer_estimates <- function(data, condition_column, experimental_columns, response_column, target_columns, condition_is_categorical,
+calculate_lmer_estimates <- function(data, condition_column, experimental_columns, response_column, condition_is_categorical,
                             response_is_categorical=FALSE, output=NULL){
 
 
@@ -35,7 +34,6 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
   if(response_is_categorical==TRUE){ print("response_is_categorical is TRUE. Categorical response variable is not accepted in the current version");return(NULL) }
   if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
-  if(sum(target_columns%in%colnames(data))!=length(target_columns) ){ print("target_columns must match column names");return(NULL) }
 
 
 
@@ -72,18 +70,6 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
   colnames(Data)[which(colnames(Data)==response_column)]="response_column"
 
 
-
-
-  ###### indices of target parameters in experimental variables
-  target_i=NULL
-  target_columns_renamed=NULL
-  ###### match target parameters
-  for(i in 1:length(target_columns)){
-    cn=colnames(Data)[which(colnames_original==target_columns[i])]
-    target_columns_renamed[i]=cn
-
-    target_i=c(target_i,as.integer(substr(cn,nchar(cn),nchar(cn))))
-  }
 
 
 
