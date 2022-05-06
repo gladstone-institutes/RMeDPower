@@ -13,7 +13,7 @@
 #'
 #' @param data Input data
 #' @param condition_column Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name
-#' @param experimental_columns Name of variables related to experimental design such as "experiment", "plate", and "cell_line".
+#' @param experimental_columns Name of variables related to experimental design such as "experiment", "plate", and "cell_line". "experiment" should come always first
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
 #' @param power_curve 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.
@@ -33,6 +33,7 @@
 #'
 #' @export
 #' @examples
+
 
 calculate_power <- function(data, condition_column, experimental_columns, repeatable_columns, response_column, target_columns, power_curve, condition_is_categorical,
                             response_is_categorical=FALSE, nsimn=1000,
@@ -379,8 +380,8 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
 
 
     for(r in 2:length(experimental_columns)){
-      if(experimental_columns[r]%in%nonrepeatable_columns){
-        attributes(extended_target_columns)$newData[nonrepeatable_columns[r]]=paste(attributes(extended_target_columns)$newData[nonrepeatable_columns[r-1]],attributes(extended_target_columns)$newData[nonrepeatable_columns[r]],sep="_")
+      if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
+        attributes(extended_target_columns)$newData[,experimental_columns_index[r]]=paste(attributes(extended_target_columns)$newData[,experimental_columns_index[r-1]],attributes(extended_target_columns)$newData[,experimental_columns_index[r]],sep="_")
       }
     }
     print(attributes(extended_target_columns)$newData)
