@@ -1,4 +1,4 @@
-CalcPower\_tutorial
+RMeDPower\_tutorial
 ================
 
 <style type="text/css">
@@ -21,13 +21,13 @@ experimental variables and parameters.
 
 ``` r
 library(devtools)
-install_github('gladstone-institutes/CalcPower', build_vignettes=TRUE)
+install_github('gladstone-institutes/RMeDPower', build_vignettes=TRUE)
 ```
 
 #### First few lines of the input data
 
 ``` r
-head(CalcPower_data1)
+head(RMeDPower_data1)
 #>   experiment plate  line classification feature1 feature2   feature3 feature4
 #> 1       exp7     1 line1              0       62 3261.238   16.69571 118.4444
 #> 2       exp7     1 line1              0       77 2033.726   54.10482 114.0946
@@ -55,7 +55,7 @@ exp1, exp2, exp3, …, exp9
 #### code example:
 
 ``` r
-calculate_power(data=CalcPower_data1,power_curve=1,
+calculate_power(data=RMeDPower_data1,power_curve=1,
                  variance_estimate_from="data",condition_variable="classification",
                  experimental_variable=c("experiment","plate","line"), response_variable="feature1",
                  nsimn=10, target_parameters="experiment", levels=1)  
@@ -77,14 +77,14 @@ calculate_power(data=CalcPower_data1,power_curve=1,
 
 ##### \* levels = 1: to explore different levels of the target parameter
 
-![Ex1 result](/Users/mingyoungshin/git/CalcPower/vignettes/ex1.jpeg)
+![Ex1 result](/Users/mingyoungshin/git/RMeDPower/vignettes/ex1.jpeg)
 
 ## Ex2. Varaince estimation and power calculation from pilot data
 
 ##### Sample sizes will be increased to max(observed sample size)x5. For example, when there are max 71 samples per cell line in the original data:
 
 ``` r
-table(CalcPower_data1$line)
+table(RMeDPower_data1$line)
 #> 
 #> line1 line2 line3 line4 line5 line6 line7 line8 
 #>    42    40    37    51    71    37    42    20
@@ -95,7 +95,7 @@ table(CalcPower_data1$line)
 #### code example:
 
 ``` r
-calculate_power(data=CalcPower_data1,power_curve=1,
+calculate_power(data=RMeDPower_data1,power_curve=1,
                  variance_estimate_from="data",condition_variable="classification",
                  experimental_variable=c("experiment","plate","line"), response_variable="feature1",
                  nsimn=10, target_parameters="line", levels=0)  
@@ -103,7 +103,7 @@ calculate_power(data=CalcPower_data1,power_curve=1,
 
 ###### \* levels = 0 : to explore different sample sizes of the target parameter
 
-![Ex2 result](/Users/mingyoungshin/git/CalcPower/vignettes/ex2.jpeg)
+![Ex2 result](/Users/mingyoungshin/git/RMeDPower/vignettes/ex2.jpeg)
 
 ## Ex3. User determined level count and output file name
 
@@ -112,7 +112,7 @@ calculate_power(data=CalcPower_data1,power_curve=1,
 #### code example:\`
 
 ``` r
-calculate_power(data=CalcPower_data1,power_curve=0,
+calculate_power(data=RMeDPower_data1,power_curve=0,
                  variance_estimate_from="data",condition_variable="classification",
                  experimental_variable=c("experiment","plate","line"), response_variable="feature1",
                  nsimn=10, target_parameters="experiment", levels=1, max_size=15,output="test.txt")  
@@ -149,7 +149,7 @@ nb: result might be an observed power calculation
 #### code example:
 
 ``` r
-calculate_power(data=CalcPower_data1,power_curve=0,
+calculate_power(data=RMeDPower_data1,power_curve=0,
                  variance_estimate_from="data",condition_variable="classification",
                  experimental_variable=c("experiment","plate","line"), response_variable="feature1",
                  nsimn=10, target_parameters="experiment", levels=1, effect_size = c(10))  
@@ -180,15 +180,15 @@ Time elapsed: 0 h 0 m 10 s
 #### code example:
 
 ``` r
-calculate_power(data=CalcPower_data1,power_curve=1,
+calculate_power(data=RMeDPower_data1,power_curve=1,
                  variance_estimate_from="data",condition_variable="classification",
                  experimental_variable=c("experiment","plate","line"), response_variable="feature2",
                  nsimn=10, target_parameters=c("experiment","line"), levels=c(1,0), max_size=c(9,142))  
 ```
 
 ![Ex5-1
-result](/Users/mingyoungshin/git/CalcPower/vignettes/ex5-1.jpeg)  
-![Ex5-2 result](/Users/mingyoungshin/git/CalcPower/vignettes/ex5-2.jpeg)
+result](/Users/mingyoungshin/git/RMeDPower/vignettes/ex5-1.jpeg)  
+![Ex5-2 result](/Users/mingyoungshin/git/RMeDPower/vignettes/ex5-2.jpeg)
 
 ## Ex6. Data with a single experimental category
 
@@ -199,7 +199,7 @@ result](/Users/mingyoungshin/git/CalcPower/vignettes/ex5-1.jpeg)
 Check sample size table of experimental varaibles:
 
 ``` r
-table(CalcPower_data2$experiment,CalcPower_data2$plate,CalcPower_data2$line)
+table(RMeDPower_data2$experiment,RMeDPower_data2$plate,RMeDPower_data2$line)
 #> , ,  = line1
 #> 
 #>       
@@ -208,10 +208,10 @@ table(CalcPower_data2$experiment,CalcPower_data2$plate,CalcPower_data2$line)
 ```
 
 ``` r
-calculate_power(data=CalcPower_data2,power_curve=1,
+calculate_power(data=RMeDPower_data2,power_curve=1,
                  variance_estimate_from="ICC",condition_variable="classification",
                  experimental_variable=c("experiment","plate","line"), response_variable="feature2",
                  nsimn=10, target_parameters=c("experiment"), levels=1, ICC=c(0.2,0.15,0.3))  
 ```
 
-![Ex8 result](/Users/mingyoungshin/git/CalcPower/vignettes/ex8.jpeg)
+![Ex8 result](/Users/mingyoungshin/git/RMeDPower/vignettes/ex8.jpeg)

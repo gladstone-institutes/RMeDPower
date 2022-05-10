@@ -1,4 +1,4 @@
-calcPower\_tutorial
+RMeDPower\_tutorial
 ================
 
 ## Introduction
@@ -12,10 +12,10 @@ variables. Users can test the power of different combinations of
 experimental variables and parameters.
 
 ## Installation
-Install the `CalcPower` package from GitHub using the following:
+Install the `RMeDPower` package from GitHub using the following:
 ``` r
 library(devtools)
-install_github('gladstone-institutes/CalcPower', build_vignettes=TRUE)
+install_github('gladstone-institutes/RMeDPower', build_vignettes=TRUE)
 ```
 
 
@@ -48,10 +48,10 @@ Consider the situation in which nine independent experiments were performed to f
 
 exp1, exp2, exp3, …, exp9
 
-The simulation extends the experiment to 'exp45'. Example data 'CalcPower_data1' is included in the package and the first few lines of this dataset are:
+The simulation extends the experiment to 'exp45'. Example data 'RMeDPower_data1' is included in the package and the first few lines of this dataset are:
 
 ``` r
-head(CalcPower_data1)
+head(RMeDPower_data1)
 #>   experiment plate  line classification feature1 feature2   feature3 feature4
 #> 1       exp7     1 line1              0       62 3261.238   16.69571 118.4444
 #> 2       exp7     1 line1              0       77 2033.726   54.10482 114.0946
@@ -75,7 +75,7 @@ The example dataset consists of three experimental variables: "experiment", "pla
 #### code example:
 
 ``` r
-calculate_power(data=CalcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+calculate_power(data=RMeDPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
                 response_column="feature1", target_columns="experiment", power_curve=1, condition_is_categorical=TRUE,
                 nsimn=10, levels=1) 
 ```
@@ -87,7 +87,7 @@ calculate_power(data=CalcPower_data1, condition_column="classification", experim
 Let us now consider the scenario where we want to estimate the power to detect an association between 'feature1' and cell conditions by changing the number of cells in each cell line. The example data set has the following number of cells for each cell line:
 
 ``` r
-table(CalcPower_data1$line)
+table(RMeDPower_data1$line)
 #> 
 #> line1 line2 line3 line4 line5 line6 line7 line8 
 #>    42    40    37    51    71    37    42    20
@@ -100,7 +100,7 @@ We will test up to 71 x 5 cells per cell line using default settings. The other 
 code example:
 
 ``` r
-calculate_power(data=CalcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+calculate_power(data=RMeDPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
                   response_column="feature1", target_columns="line", power_curve=1, condition_is_categorical=TRUE,
                   nsimn=10, levels=0) 
 ```
@@ -117,7 +117,7 @@ Now instead of creating a power trend curve for multiple levels, we will test a 
 code example:\`
 
 ``` r
-calculate_power(data=CalcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+calculate_power(data=RMeDPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
                 response_column="feature1", target_columns="experiment", power_curve=0, condition_is_categorical=TRUE,
                 nsimn=10, levels=1, max_size=15, output="test.txt") 
 ```
@@ -152,7 +152,7 @@ Now we will estimate the power with the given effect size of the cell condition 
 code example:
 
 ``` r
-calculate_power(data=CalcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+calculate_power(data=RMeDPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
                 response_column="feature1", target_columns="experiment", power_curve=0, condition_is_categorical=TRUE,
                 nsimn=10, levels=1, effect_size = c(10)) 
 ```
@@ -182,7 +182,7 @@ You can test more than one parameter for a single run. Suppose we are estimating
 code example:
 
 ``` r
-calculate_power(data=CalcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+calculate_power(data=RMeDPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
                 response_column="feature2", target_columns=c("experiment","line"), power_curve=1, condition_is_categorical=TRUE,
                 nsimn=10, levels=c(1,0), max_size=c(9,142) )
 ```
@@ -202,7 +202,7 @@ where V_i represents the standard deviation of the experimental variable i and e
 We will test this scenario using the example dataset with only single experiment and cell line:
 
 ``` r
-table(CalcPower_data2$experiment,CalcPower_data2$plate,CalcPower_data2$line)
+table(RMeDPower_data2$experiment,RMeDPower_data2$plate,RMeDPower_data2$line)
 #> , ,  = line1
 #> 
 #>       
@@ -216,7 +216,7 @@ code example:
 
 
 ``` r
-calculate_power(data=CalcPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
+calculate_power(data=RMeDPower_data1, condition_column="classification", experimental_columns=c("experiment","plate","line"),
                 response_column="feature2", target_columns=c("experiment"), power_curve=1, condition_is_categorical=TRUE,
                 nsimn=10, levels=c(1),  ICC=c(0.2,0.15,0.3))  
 ```
