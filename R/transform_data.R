@@ -36,9 +36,13 @@ transform_data<-function(data,condition_column, experimental_columns, response_c
   options(warn=-1)
   upper_bound <- median(trait) + 3 * mad(trait)
   upper_bound
+  
+  
+  lower_bound <- median(trait) - 3 * mad(trait)
+  lower_bound
 
 
-  outlierC=sum(trait>upper_bound)
+  outlierC=sum(trait>upper_bound)+sum(trait<lower_bound)
   outlierC
 
   if(outlierC >0  ){
@@ -50,7 +54,7 @@ transform_data<-function(data,condition_column, experimental_columns, response_c
     outliers=test$all.stats$Value[test$all.stats$Outlier]
 
     if(length(test$all.stats$Outlier) !=0  ){
-      if(! ( length(test$all.stats$Outlier) ==1 & is.infinite(test$all.stats$Outlier) ) ){
+      if(! ( length(test$all.stats$Outlier) ==1 & sum(is.infinite(test$all.stats$Outlier)) ) ){
 
         cutoff=min( outliers[which(outliers>median(trait))] )
 
