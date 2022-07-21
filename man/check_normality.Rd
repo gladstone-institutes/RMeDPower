@@ -10,6 +10,7 @@ check_normality(
   experimental_columns,
   response_column,
   condition_is_categorical,
+  repeatable_columns = NA,
   response_is_categorical = FALSE,
   image_title = NULL
 )
@@ -24,6 +25,8 @@ check_normality(
 \item{response_column}{Name of the variable observed by performing the experiment. ex) intensity.}
 
 \item{condition_is_categorical}{Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.}
+
+\item{repeatable_columns}{Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment}
 
 \item{response_is_categorical}{Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).}
 

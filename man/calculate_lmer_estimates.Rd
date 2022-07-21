@@ -9,10 +9,10 @@ calculate_lmer_estimates(
   condition_column,
   experimental_columns,
   response_column,
-  target_columns,
   condition_is_categorical,
+  repeatable_columns = NA,
   response_is_categorical = FALSE,
-  output = NULL
+  family = NULL
 )
 }
 \arguments{
@@ -20,17 +20,17 @@ calculate_lmer_estimates(
 
 \item{condition_column}{Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name}
 
-\item{experimental_columns}{Name of variables related to experimental design such as "experiment", "plate", and "cell_line".}
+\item{experimental_columns}{Name of variables related to experimental design such as "experiment", "plate", and "cell_line". "experiment" should come always first}
 
 \item{response_column}{Name of the variable observed by performing the experiment. ex) intensity.}
 
-\item{target_columns}{Name of the experimental parameters to use for the power calculation.}
-
 \item{condition_is_categorical}{Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.}
+
+\item{repeatable_columns}{Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment}
 
 \item{response_is_categorical}{Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).}
 
-\item{output}{Output file name}
+\item{family}{The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.}
 }
 \value{
 A linear mixed model result

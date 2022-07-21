@@ -8,13 +8,14 @@ calculate_power(
   data,
   condition_column,
   experimental_columns,
-  repeatable_columns,
   response_column,
   target_columns,
   power_curve,
   condition_is_categorical,
+  repeatable_columns = NA,
   response_is_categorical = FALSE,
   nsimn = 1000,
+  family = NULL,
   levels = NULL,
   max_size = NULL,
   breaks = NULL,
@@ -28,9 +29,7 @@ calculate_power(
 
 \item{condition_column}{Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name}
 
-\item{experimental_columns}{Name of variables related to experimental design such as "experiment", "plate", and "cell_line".}
-
-\item{repeatable_columns}{Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment}
+\item{experimental_columns}{Name of variables related to experimental design such as "experiment", "plate", and "cell_line". "experiment" should come always first}
 
 \item{response_column}{Name of the variable observed by performing the experiment. ex) intensity.}
 
@@ -40,7 +39,11 @@ calculate_power(
 
 \item{condition_is_categorical}{Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.}
 
-\item{response_is_categorical}{Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).}
+\item{repeatable_columns}{Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment}
+
+\item{response_is_categorical}{Default: the observed variable is continuous TRUE: Categorical , FALSE: Continuous (default).}
+
+\item{family}{The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.}
 
 \item{levels}{1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_columns = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).}
 
