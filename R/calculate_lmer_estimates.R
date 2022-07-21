@@ -14,10 +14,11 @@
 #' @param data Input data
 #' @param condition_column Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name
 #' @param experimental_columns Name of variables related to experimental design such as "experiment", "plate", and "cell_line". "experiment" should come always first
-#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
+#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
+#' @param family The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
 #' @return A linear mixed model result
 #'
 #' @export
@@ -25,18 +26,21 @@
 
 
 
-calculate_lmer_estimates <- function(data, condition_column, experimental_columns, repeatable_columns, response_column, condition_is_categorical,
-                            response_is_categorical=FALSE){
+calculate_lmer_estimates <- function(data, condition_column, experimental_columns, response_column, condition_is_categorical,
+                                     repeatable_columns=NA, response_is_categorical=FALSE, family=NULL){
 
 
 
   ######input error handler
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
-  if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
-  if(response_is_categorical==TRUE){ print("response_is_categorical is TRUE. Categorical response variable is not accepted in the current version");return(NULL) }
-  if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
 
+  if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
+  if(!is.na(repeatable_columns)){if(sum(repeatable_columns%in%colnames(data))!=length(repeatable_columns) ){ print("repeatable_columns must match column names");return(NULL) }}
+
+  if(response_is_categorical==TRUE){
+    family=switch(family, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log") )
+  }
 
 
   ####### remove empty lines
@@ -51,9 +55,7 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
   experimental_columns_index=NULL
   ####### assign categorical variables
   if(condition_is_categorical==TRUE) Data[,condition_column]=as.factor(Data[,condition_column])
-  if(response_is_categorical==TRUE) {
-    cat("\n")
-    print("_________________________________Categorical response variable is not accepted in the current version")}
+
   cat("\n")
 
 
@@ -92,6 +94,7 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
 
   ####### run the formula
 
+  if(response_is_categorical==FALSE){
     if(length(experimental_columns)==1){
       lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
     }else if(length(experimental_columns)==2){
@@ -103,6 +106,20 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
     }else if(length(experimental_columns)==5){
       lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
     }
+  }else{
+    if(length(experimental_columns)==1){
+      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family)
+    }else if(length(experimental_columns)==2){
+      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family)
+    }else if(length(experimental_columns)==3){
+      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family)
+    }else if(length(experimental_columns)==4){
+      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family)
+    }else if(length(experimental_columns)==5){
+      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family)
+    }
+  }
+
 
 
 

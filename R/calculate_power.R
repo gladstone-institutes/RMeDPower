@@ -14,12 +14,13 @@
 #' @param data Input data
 #' @param condition_column Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name
 #' @param experimental_columns Name of variables related to experimental design such as "experiment", "plate", and "cell_line". "experiment" should come always first
-#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
 #' @param power_curve 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
-#' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
+#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
+#' @param response_is_categorical Default: the observed variable is continuous TRUE: Categorical , FALSE: Continuous (default).
 #' @param nsim The number of simulations to run. Default=1000
+#' @param family The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
 #' @param target_columns Name of the experimental parameters to use for the power calculation.
 #' @param levels 1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_columns = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).
 #' @param max_size Maximum levels or sample sizes to test. Default: the current level or the current sample size x 5. ex) If max_levels = c(10,5), it will test upto 10 experiments and 5 cell lines.
@@ -35,8 +36,8 @@
 #' @examples
 
 
-calculate_power <- function(data, condition_column, experimental_columns, repeatable_columns, response_column, target_columns, power_curve, condition_is_categorical,
-                            response_is_categorical=FALSE, nsimn=1000,
+calculate_power <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical,
+                            repeatable_columns = NA, response_is_categorical=FALSE, nsimn=1000, family=NULL,
                             levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, output=NULL){
 
 
@@ -49,9 +50,9 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
   if(length(power_curve)==0 | !power_curve%in%c(0,1)){ print("power_curve must be 0 or 1");return(NULL) }
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
-  if(sum(repeatable_columns%in%colnames(data))!=length(repeatable_columns) ){ print("repeatable_columns must match column names");return(NULL) }
+  if(!is.na(repeatable_columns)){if(sum(repeatable_columns%in%colnames(data))!=length(repeatable_columns) ){ print("repeatable_columns must match column names");return(NULL) }}
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
-  if(response_is_categorical==TRUE){ print("response_is_categorical is TRUE. Categorical response variable is not accepted in the current version");return(NULL) }
+
   if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
   if(! (is.numeric(nsimn)&&nsimn>0) ){ print("nsimn should be a positive integer");return(NULL) }
   if(sum(target_columns%in%colnames(data))!=length(target_columns) ){ print("target_columns must match column names");return(NULL) }
@@ -59,8 +60,11 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
   if(!( is.null(max_size) | (is.numeric(max_size)&&sum(max_size>0)==length(max_size)) ) ){print("max_size a positive integer");return(NULL) }
   if(!( is.null(breaks) | (is.numeric(breaks)&&breaks>0) ) ){ print("breaks must be a positive integer");return(NULL) }
   if(!( is.null(effect_size) | (is.numeric(effect_size)&&effect_size>0) ) ){ print("effect_size a positive integer");return(NULL) }
+  if(!is.null(ICC) & response_is_categorical==TRUE ){ print("ICC-based simulations are not supported when the response is categorical.");return(NULL) }
 
-
+  if(response_is_categorical==TRUE){
+    family=switch(family, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log") )
+  }
 
 
   ####### remove empty lines
@@ -75,10 +79,7 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
   experimental_columns_index=NULL
   ####### assign categorical variables
   if(condition_is_categorical==TRUE) Data[,condition_column]=as.factor(Data[,condition_column])
-  if(response_is_categorical==TRUE) {
-    cat("\n")
-    print("_________________________________Categorical response variable is not accepted in the current version")}
-  cat("\n")
+
 
 
   nonrepeatable_columns=NULL
@@ -120,20 +121,40 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
 
   ####### run the formula
   if(length(ICC)==0){
-    if(length(experimental_columns)==1){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
-    }else if(length(experimental_columns)==2){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
-    }else if(length(experimental_columns)==3){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
-    }else if(length(experimental_columns)==4){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
-    }else if(length(experimental_columns)==5){
-      lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+
+    if(response_is_categorical==FALSE){
+      if(length(experimental_columns)==1){
+        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
+      }else if(length(experimental_columns)==2){
+        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
+      }else if(length(experimental_columns)==3){
+        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
+      }else if(length(experimental_columns)==4){
+        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
+      }else if(length(experimental_columns)==5){
+        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+      }
+    }else{
+      if(length(experimental_columns)==1){
+        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family)
+      }else if(length(experimental_columns)==2){
+        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family)
+      }else if(length(experimental_columns)==3){
+        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family)
+      }else if(length(experimental_columns)==4){
+        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family)
+      }else if(length(experimental_columns)==5){
+        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family)
+      }
+
     }
+
   }else{
 
-    lmerFit=stats::lm(response_column ~ condition_column, data=Data)
+
+      lmerFit=stats::lm(response_column ~ condition_column, data=Data)
+
+
 
   }
 
@@ -183,10 +204,13 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
       print(paste("__________________________________________________________________Estimated variance of the experimental variables:",paste(varEs)))
       cat("\n")
 
-      artificial_glmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2)
-                                      , data=Data,
-                                      VarCorr = as.list(varEs), sigma = slmerFit$sigma,
-                                      fixef=fixed_effects )
+
+        artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2)
+                                       , data=Data,
+                                       VarCorr = as.list(varEs), sigma = slmerFit$sigma,
+                                       fixef=fixed_effects )
+
+
 
     }else if(length(experimental_columns)==3){
 
@@ -198,10 +222,12 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
       cat("\n")
 
 
-      artificial_glmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
-                                        (1 | experimental_column3) , data=Data,
-                                      VarCorr = as.list(varEs), sigma = slmerFit$sigma,
-                                      fixef=fixed_effects )
+        artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
+                                         (1 | experimental_column3) , data=Data,
+                                       VarCorr = as.list(varEs), sigma = slmerFit$sigma,
+                                       fixef=fixed_effects )
+
+
 
 
     }else if(length(experimental_columns)==4){
@@ -213,10 +239,12 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
       print(paste("__________________________________________________________________Estimated variance of the experimental variables:",paste(varEs)))
       cat("\n")
 
-      artificial_glmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
-                                        (1 | experimental_column3) + (1 | experimental_column4) , data=Data,
-                                      VarCorr = as.list(varEs), sigma = slmerFit$sigma,
-                                      fixef=fixed_effects )
+
+        artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
+                                         (1 | experimental_column3) + (1 | experimental_column4) , data=Data,
+                                       VarCorr = as.list(varEs), sigma = slmerFit$sigma,
+                                       fixef=fixed_effects )
+
 
     }else if(length(experimental_columns)==5){
 
@@ -228,20 +256,23 @@ calculate_power <- function(data, condition_column, experimental_columns, repeat
       print(paste("__________________________________________________________________Estimated variance of the experimental variables:",paste(varEs)))
       cat("\n")
 
-      artificial_glmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
-                                        (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data,
-                                      VarCorr = as.list(varEs), sigma = slmerFit$sigma,
-                                      fixef=fixed_effects )
+
+        artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
+                                         (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data,
+                                       VarCorr = as.list(varEs), sigma = slmerFit$sigma,
+                                       fixef=fixed_effects )
+
+
 
     }
 
 
     cat("\n")
-    print(artificial_glmer)
+    print(artificial_lmer)
     print("__________________________________________________________________Model statistics:")
-    print(summary(artificial_glmer))
+    print(summary(artificial_lmer))
     cat("\n")
-    lmerFit=artificial_glmer
+    lmerFit=artificial_lmer
 
 
   }
