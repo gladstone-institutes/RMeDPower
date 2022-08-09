@@ -20,17 +20,17 @@
 
 
 
-transform_Data<-function(data, condition_column, experimental_columns, response_column, condition_is_categorical,
+transform_data<-function(data, condition_column, experimental_columns, response_column, condition_is_categorical,
                          repeatable_columns = NA, response_is_categorical=FALSE, alpha=0.05){
 
   Data_updated=data
-  
+
   ##raw qq
   residual=check_normality(data, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
                   response_column = response_column,  condition_is_categorical = condition_is_categorical,
                   response_is_categorical = FALSE, image_title="QQplot (raw data)")
-  
-    
+
+
 
 
   ############rosner's test begin
@@ -61,14 +61,14 @@ transform_Data<-function(data, condition_column, experimental_columns, response_
         cutoff2=NA
         if(sum(outliers>median(trait)) >0) cutoff1=min( outliers[which(outliers>median(trait))] )
         if(sum(outliers<median(trait)) >0) cutoff2=max( outliers[which(outliers<median(trait))] )
-        
+
 
         ###plot the distribution and point the outlier boundary
         hist(trait,breaks=1000, main=paste0("Histogram of raw ",response_column, " values and detected outliers" ) )
-        
+
         if(!is.na(cutoff1)) abline(v=cutoff1,col="red")
         if(!is.na(cutoff2)) abline(v=cutoff2,col="red")
-        
+
         if(!is.na(cutoff1)&is.na(cutoff2)){
           mtext(paste0("Cutoff at ",cutoff1 ),cex=1.2)
         }else if(!is.na(cutoff2)&is.na(cutoff1)){
@@ -76,7 +76,7 @@ transform_Data<-function(data, condition_column, experimental_columns, response_
         }else{
           mtext(paste0("Cutoff at ",cutoff1, " and ", cutoff2 ),cex=1.2)
         }
-        
+
 
 
         ############rosner's test end
@@ -92,7 +92,7 @@ transform_Data<-function(data, condition_column, experimental_columns, response_
         if(!is.na(cutoff2)){
           Data_noOutlier[residual<cutoff2,]=NA
         }
-        
+
 
         Data_updated=cbind(Data_noOutlier[,response_column], Data_updated)
         colnames(Data_updated)[1]=paste0(response_column,"_noOutlier")
@@ -151,10 +151,10 @@ transform_Data<-function(data, condition_column, experimental_columns, response_
   options(warn=-1)
   upper_bound <- median(trait) + 3 * mad(trait)
   upper_bound
-  
+
   lower_bound <- median(trait) - 3 * mad(trait)
   lower_bound
-  
+
   outlierC=sum(trait>upper_bound)+sum(trait<lower_bound)
   outlierC
 
@@ -171,13 +171,13 @@ transform_Data<-function(data, condition_column, experimental_columns, response_
         cutoff2=NA
         if(sum(outliers>median(trait)) >0) cutoff1=min( outliers[which(outliers>median(trait))] )
         if(sum(outliers<median(trait)) >0) cutoff2=max( outliers[which(outliers<median(trait))] )
-        
+
 
         ###plot the distribution and point the outlier boundary
         hist(trait,breaks=1000, main=paste0("Histogram of log-transformed ",response_column, " values and detected outliers" ) )
         if(!is.na(cutoff1)) abline(v=cutoff1,col="red")
         if(!is.na(cutoff2)) abline(v=cutoff2,col="red")
-        
+
         if(!is.na(cutoff1)&is.na(cutoff2)){
           mtext(paste0("Cutoff at ",cutoff1 ),cex=1.2)
         }else if(!is.na(cutoff2)&is.na(cutoff1)){
@@ -185,7 +185,7 @@ transform_Data<-function(data, condition_column, experimental_columns, response_
         }else{
           mtext(paste0("Cutoff at ",cutoff1, " and ", cutoff2 ),cex=1.2)
         }
-        
+
 
         ############rosner's test end
 
@@ -194,14 +194,14 @@ transform_Data<-function(data, condition_column, experimental_columns, response_
 
 
         Data_log_noOutlier=Data_log
-        
+
         if(!is.na(cutoff1)){
           Data_log_noOutlier[residual>cutoff1,]=NA
         }
         if(!is.na(cutoff2)){
           Data_log_noOutlier[residual<cutoff2,]=NA
         }
-        
+
         Data_updated=cbind(Data_log_noOutlier[,response_column], Data_updated)
         colnames(Data_updated)[1]=paste0(response_column,"_logTransformed_noOutlier")
 
@@ -221,6 +221,6 @@ transform_Data<-function(data, condition_column, experimental_columns, response_
     print("No outlier detected from the raw Data")
   }
 
-  
+
   return(Data_updated)
 }
