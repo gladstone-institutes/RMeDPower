@@ -24,7 +24,6 @@ get_residuals<-function(data, condition_column, experimental_columns, response_c
                         repeatable_columns=NA, response_is_categorical=FALSE, family=NULL){
 
 
-  condition_is_categorical = TRUE; repeatable_columns = "line"; response_is_categorical=FALSE; family=NULL
 
   ######input error handler
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
