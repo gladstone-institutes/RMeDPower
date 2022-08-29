@@ -409,13 +409,16 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
     }
 
-
-    for(r in 2:length(experimental_columns)){
-      if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
-        attributes(extended_target_columns)$newData[,experimental_columns_index[r]]=paste(attributes(extended_target_columns)$newData[,experimental_columns_index[r-1]],attributes(extended_target_columns)$newData[,experimental_columns_index[r]],sep="_")
+    if(length(experimental_columns)>2){
+            for(r in 2:length(experimental_columns)){
+        if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
+          attributes(extended_target_columns)$newData[,experimental_columns_index[r]]=paste(attributes(extended_target_columns)$newData[,experimental_columns_index[r-1]],attributes(extended_target_columns)$newData[,experimental_columns_index[r]],sep="_")
+        }
       }
+      print(attributes(extended_target_columns)$newData)
     }
-    print(attributes(extended_target_columns)$newData)
+
+
 
     ###### power simulation
 
@@ -505,13 +508,16 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
     }
 
-    for(r in 2:length(experimental_columns)){
-      if(experimental_columns[r]%in%nonrepeatable_columns){
-        attributes(extended_target_columns)$newData[nonrepeatable_columns[r]]=paste(attributes(extended_target_columns)$newData[nonrepeatable_columns[r-1]],
-                                                                                    attributes(extended_target_columns)$newData[nonrepeatable_columns[r]],sep="_")
+    if(length(experimental_columns)>2){
+            for(r in 2:length(experimental_columns)){
+        if(experimental_columns[r]%in%nonrepeatable_columns){
+          attributes(extended_target_columns)$newData[nonrepeatable_columns[r]]=paste(attributes(extended_target_columns)$newData[nonrepeatable_columns[r-1]],
+                                                                                      attributes(extended_target_columns)$newData[nonrepeatable_columns[r]],sep="_")
+        }
       }
+      print(attributes(extended_target_columns)$newData)
     }
-    print(attributes(extended_target_columns)$newData)
+
 
     ###### power curve simulation
     for(i in 1:length(target_columns)){

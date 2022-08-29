@@ -71,12 +71,15 @@ get_residuals<-function(data, condition_column, experimental_columns, response_c
   }
 
 
-
-  for(r in 2:length(experimental_columns)){
-    if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
-      Data[,experimental_columns_index[r]]=paste(Data[,experimental_columns_index[r-1]], Data[,experimental_columns_index[r]],sep="_")
+  if(length(experimental_columns)>2){
+        for(r in 2:length(experimental_columns)){
+      if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
+        Data[,experimental_columns_index[r]]=paste(Data[,experimental_columns_index[r-1]], Data[,experimental_columns_index[r]],sep="_")
+      }
     }
   }
+
+
 
 
   colnames(Data)[which(colnames(Data)==condition_column)]="condition_column"
