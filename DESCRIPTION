@@ -1,7 +1,7 @@
 Package: RMeDPower
 Type: Package
 Title: Power Calculation for biological experiments
-Version: 0.1.5
+Version: 0.1.6
 Author: Min-Gyoung Shin 
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: It uses simulation to perform power analysis. It is designed to explore the power of biological experiments and to suggest an optimal number of experimental variables with reasonable power. The backbone of the function is based on simr package, which fits a fixed effect or mixed effect model based on the observed data and simulates response variables. Users can test the power of different combinations of experimental variables and parameters.

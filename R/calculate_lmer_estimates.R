@@ -19,6 +19,8 @@
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param family The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
+#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not ollowed only in condition, experimental, and response columns
+#'
 #' @return A linear mixed model result
 #'
 #' @export
@@ -27,7 +29,7 @@
 
 
 calculate_lmer_estimates <- function(data, condition_column, experimental_columns, response_column, condition_is_categorical,
-                                     repeatable_columns=NA, response_is_categorical=FALSE, family=NULL){
+                                     repeatable_columns=NA, response_is_categorical=FALSE, family=NULL, na.action="complete"){
 
 
 
@@ -43,8 +45,20 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
   }
 
 
-  ####### remove empty lines
-  Data <- data[complete.cases(data),]
+  if(na.action=="complete"){
+
+    notNAindex=which( rowSums(is.na(data)) == 0 )
+
+  }else if(na.action=="unique"){
+
+    notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
+
+  }
+
+
+
+  Data=data[notNAindex,]
+
 
   cat("\n")
   print("__________________________________________________________________Summary of data:")
@@ -91,9 +105,6 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
 
   colnames(Data)[which(colnames(Data)==condition_column)]="condition_column"
   colnames(Data)[which(colnames(Data)==response_column)]="response_column"
-
-
-
 
 
   ####### run the formula

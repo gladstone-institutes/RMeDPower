@@ -25,6 +25,7 @@
 #' @param levels 1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_columns = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).
 #' @param max_size Maximum levels or sample sizes to test. Default: the current level or the current sample size x 5. ex) If max_levels = c(10,5), it will test upto 10 experiments and 5 cell lines.
 #' @param breaks Levels /sample sizes of the variable to be specified along the power curve.. Default: max(1, round( the number of current levels / 5 ))
+#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not ollowed only in condition, experimental, response, and target columns
 #' @param output Output file name
 ##### If variance estimates should be estimated from data
 #' @param  effect_size If you know the effect size of your condition variable, provided it. If the effect size is not provided, it will be estimated from your data
@@ -38,7 +39,7 @@
 
 calculate_power <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical,
                             repeatable_columns = NA, response_is_categorical=FALSE, nsimn=1000, family=NULL,
-                            levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, output=NULL){
+                            levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, na.action="complete", output=NULL){
 
 
 
@@ -67,8 +68,18 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   }
 
 
-  ####### remove empty lines
-  Data <- data[complete.cases(data),]
+  if(na.action=="complete"){
+
+    notNAindex=which( rowSums(is.na(data)) == 0 )
+
+  }else if(na.action=="unique"){
+
+    notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
+
+  }
+
+  Data=data[notNAindex,]
+
 
   cat("\n")
   print("__________________________________________________________________Summary of data:")

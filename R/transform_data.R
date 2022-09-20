@@ -11,6 +11,7 @@
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param alpha numeric scalar between 0 and 1 indicating the Type I error associated with the test of outliers
+#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not ollowed only in condition, experimental, and response columns
 #'
 #' @return Quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values iii) raw residual values after removing outliers, and iv) log-transformed residual values
 #'
@@ -21,14 +22,30 @@
 
 
 transform_data<-function(data, condition_column, experimental_columns, response_column, condition_is_categorical,
-                         repeatable_columns = NA, response_is_categorical=FALSE, alpha=0.05){
+                         repeatable_columns = NA, response_is_categorical=FALSE, alpha=0.05, na.action="complete"){
+
+
+  if(na.action=="complete"){
+
+    notNAindex=which( rowSums(is.na(data)) == 0 )
+
+  }else if(na.action=="unique"){
+
+    notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
+
+  }
+
+
+
+  data=data[notNAindex,]
+
 
   Data_updated=data
 
   ##raw qq
   residual=check_normality(data, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
                   response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                  response_is_categorical = FALSE, image_title="QQplot (raw data)")
+                  response_is_categorical = FALSE, image_title="QQplot (raw data)", na.action=na.action)
 
 
 
@@ -100,7 +117,7 @@ transform_data<-function(data, condition_column, experimental_columns, response_
 
         check_normality(Data_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
                         response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                        response_is_categorical = FALSE,  image_title="QQplot (outlier excluded Data)")
+                        response_is_categorical = FALSE,  image_title="QQplot (outlier excluded Data)", na.action=na.action)
       }
 
 
@@ -138,7 +155,7 @@ transform_data<-function(data, condition_column, experimental_columns, response_
 
   residual=check_normality(Data_log, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
                   response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                  response_is_categorical = FALSE,  image_title="QQplot (log transformed Data)")
+                  response_is_categorical = FALSE,  image_title="QQplot (log transformed Data)", na.action=na.action)
 
 
 
@@ -208,7 +225,7 @@ transform_data<-function(data, condition_column, experimental_columns, response_
         ###qqplot
         check_normality(Data_log_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
                         response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                        response_is_categorical = FALSE,  image_title="QQplot (log transformed & ouliter excluded Data)")
+                        response_is_categorical = FALSE,  image_title="QQplot (log transformed & ouliter excluded Data)", na.action=na.action)
 
     }
 
