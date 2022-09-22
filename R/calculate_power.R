@@ -420,7 +420,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
     }
 
-    if(length(experimental_columns)>2){
+    if(length(experimental_columns)>=2){
             for(r in 2:length(experimental_columns)){
         if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
           attributes(extended_target_columns)$newData[,experimental_columns_index[r]]=paste(attributes(extended_target_columns)$newData[,experimental_columns_index[r-1]],attributes(extended_target_columns)$newData[,experimental_columns_index[r]],sep="_")
@@ -519,7 +519,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
     }
 
-    if(length(experimental_columns)>2){
+    if(length(experimental_columns)>=2){
             for(r in 2:length(experimental_columns)){
         if(experimental_columns[r]%in%nonrepeatable_columns){
           attributes(extended_target_columns)$newData[nonrepeatable_columns[r]]=paste(attributes(extended_target_columns)$newData[nonrepeatable_columns[r-1]],

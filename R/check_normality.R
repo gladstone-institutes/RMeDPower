@@ -77,7 +77,7 @@ check_normality<-function(data, condition_column, experimental_columns, response
   }
 
 
-  if(length(experimental_columns)>2){
+  if(length(experimental_columns)>=2){
         for(r in 2:length(experimental_columns)){
       if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
         Data[,experimental_columns_index[r]]=paste(Data[,experimental_columns_index[r-1]], Data[,experimental_columns_index[r]],sep="_")
