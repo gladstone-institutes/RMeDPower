@@ -14,6 +14,7 @@
 #' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not ollowed only in condition, experimental, and response columns
 #'
 #' @return Quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values iii) raw residual values after removing outliers, and iv) log-transformed residual values
+#' @return This function returns a matrix with original columns and additional columns with transformed values. Users can select a feature column for power analysis or regression analysis based on QQ plot results.
 #'
 #' @export
 #'
@@ -104,10 +105,10 @@ transform_data<-function(data, condition_column, experimental_columns, response_
 
         Data_noOutlier=Data_updated
         if(!is.na(cutoff1)){
-          Data_noOutlier[residual>cutoff1,]=NA
+          Data_noOutlier[residual>=cutoff1,]=NA
         }
         if(!is.na(cutoff2)){
-          Data_noOutlier[residual<cutoff2,]=NA
+          Data_noOutlier[residual<=cutoff2,]=NA
         }
 
 
@@ -143,11 +144,29 @@ transform_data<-function(data, condition_column, experimental_columns, response_
 
   ###log transform
 
-  Data_log=data
-  temp1=Data_log[,response_column]
-  temp2=min(temp1[temp1>0], temp1[temp1<0])
-  temp2 = 1 - min(temp1)
-  Data_log[,response_column]=log(Data_log[,response_column]+temp2)
+    ###log transform
+
+    Data_log=data
+    temp1=Data_log[, response_column]
+
+
+    #seperate zero and negative
+    if(min(Data_log[,response_column])<0){
+
+      temp2 = abs(min(temp1))/10 - min(temp1)
+      Data_log[,response_column]=log(Data_log[,response_column]+temp2)
+
+    }else if(min(Data_log[,response_column])==0){
+
+      temp2 = min(temp1[temp1>0])/10
+      Data_log[,response_column]=log(Data_log[,response_column]+temp2)
+
+    }else{
+
+      Data_log[,response_column]=log(Data_log[,response_column])
+
+    }
+
 
   Data_updated=cbind(Data_log[,response_column], Data_updated)
   colnames(Data_updated)[1]=paste0(response_column,"_logTransformed")
@@ -213,10 +232,10 @@ transform_data<-function(data, condition_column, experimental_columns, response_
         Data_log_noOutlier=Data_log
 
         if(!is.na(cutoff1)){
-          Data_log_noOutlier[residual>cutoff1,]=NA
+          Data_log_noOutlier[residual>=cutoff1,]=NA
         }
         if(!is.na(cutoff2)){
-          Data_log_noOutlier[residual<cutoff2,]=NA
+          Data_log_noOutlier[residual<=cutoff2,]=NA
         }
 
         Data_updated=cbind(Data_log_noOutlier[,response_column], Data_updated)

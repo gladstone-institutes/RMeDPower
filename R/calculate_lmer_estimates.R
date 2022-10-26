@@ -123,15 +123,15 @@ calculate_lmer_estimates <- function(data, condition_column, experimental_column
     }
   }else{
     if(length(experimental_columns)==1){
-      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family)
     }else if(length(experimental_columns)==2){
-      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family)
     }else if(length(experimental_columns)==3){
-      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family)
     }else if(length(experimental_columns)==4){
-      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family)
     }else if(length(experimental_columns)==5){
-      lmerFit <- lmerTest::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family)
     }
   }
 
