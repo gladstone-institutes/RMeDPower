@@ -11,13 +11,15 @@
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param image_title title of the qq plot
-#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not ollowed only in condition, experimental, and response columns
+#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not allowed only in condition, experimental, and response columns. Selecting "complete" removes an entire row when there is one or more missing values, which may affect the distribution of other features.
 #'
 #' @return A quantile-quantile (qq) plot of residual values in a mixed-effects model
 #'
 #' @export
 #'
-#' @examples check_normality(data,"classif",c("experiment","line"),"feature1","TRUE")
+#' @examples check_normality(data=RMeDPower_data1, condition_column="classification", experimental_columns=c("experiment","line"),
+#' @examples  response_column="cell_size1", condition_is_categorical=TRUE, repeatable_columns="line")
+
 
 
 

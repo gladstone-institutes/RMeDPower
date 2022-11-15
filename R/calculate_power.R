@@ -19,13 +19,13 @@
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous TRUE: Categorical , FALSE: Continuous (default).
-#' @param nsim The number of simulations to run. Default=1000
+#' @param nsimn The number of simulations to run. Default=1000
 #' @param family The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
 #' @param target_columns Name of the experimental parameters to use for the power calculation.
 #' @param levels 1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_columns = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, levels = c(1,0).
 #' @param max_size Maximum levels or sample sizes to test. Default: the current level or the current sample size x 5. ex) If max_levels = c(10,5), it will test upto 10 experiments and 5 cell lines.
 #' @param breaks Levels /sample sizes of the variable to be specified along the power curve.. Default: max(1, round( the number of current levels / 5 ))
-#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not ollowed only in condition, experimental, response, and target columns
+#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not allowed only in condition, experimental, response, and target columns. Selecting "complete" removes an entire row when there is one or more missing values, which may affect the distribution of other features.
 #' @param output Output file name
 ##### If variance estimates should be estimated from data
 #' @param  effect_size If you know the effect size of your condition variable, provided it. If the effect size is not provided, it will be estimated from your data
@@ -34,7 +34,16 @@
 #' @return A power curve image or a power calculation result printed in a text file
 #'
 #' @export
-#' @examples
+#' @examples result=calculate_power(data=RMeDPower_data1,
+#' @examples condition_column="classification",
+#' @examples experimental_columns=c("experiment", "line"),
+#' @examples response_column="cell_size1",
+#' @examples target_columns="experiment",
+#' @examples power_curve=1,
+#' @examples condition_is_categorical=TRUE,
+#' @examples repeatable_columns = "line",
+#' @examples response_is_categorical=FALSE,
+#' @examples levels=1)
 
 
 calculate_power <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical,

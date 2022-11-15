@@ -19,12 +19,19 @@
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param family The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
-#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not ollowed only in condition, experimental, and response columns
+#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not allowed only in condition, experimental, and response columns. Selecting "complete" removes an entire row when there is one or more missing values, which may affect the distribution of other features.
 #'
 #' @return A linear mixed model result
 #'
 #' @export
-#' @examples
+#' @examples result=calculate_lmer_estimates(data=RMeDPower_data1,
+#' @examples condition_column="classification",
+#' @examples experimental_columns=c("experiment", "line"),
+#' @examples response_column="cell_size1",
+#' @examples condition_is_categorical=TRUE,
+#' @examples repeatable_columns = "line",
+#' @examples family=NULL,
+#' @examples response_is_categorical=FALSE)
 
 
 

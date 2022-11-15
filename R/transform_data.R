@@ -11,15 +11,20 @@
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param alpha numeric scalar between 0 and 1 indicating the Type I error associated with the test of outliers
-#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not ollowed only in condition, experimental, and response columns
+#' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not allowed only in condition, experimental, and response columns. Selecting "complete" removes an entire row when there is one or more missing values, which may affect the distribution of other features.
 #'
 #' @return Quantile-quanitle (qq) plots of i) raw residual values ii) log-transformed residual values iii) raw residual values after removing outliers, and iv) log-transformed residual values
 #' @return This function returns a matrix with original columns and additional columns with transformed values. Users can select a feature column for power analysis or regression analysis based on QQ plot results.
 #'
 #' @export
 #'
-#' @examples transform_data(data,"classif",c("experiment","line"),"feature1","TRUE")
-
+#' @examples result=transform_data(data=RMeDPower_data1,
+#' @examples condition_column="classification",
+#' @examples experimental_columns=c("experiment", "line"),
+#' @examples response_column="cell_size1",
+#' @examples condition_is_categorical=TRUE,
+#' @examples repeatable_columns = "line",
+#' @examples response_is_categorical=FALSE)
 
 
 transform_data<-function(data, condition_column, experimental_columns, response_column, condition_is_categorical,
