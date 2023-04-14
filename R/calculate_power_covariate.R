@@ -1,4 +1,4 @@
-#' @title calculate_power
+#' @title calculate_power_covariate
 #'
 #'
 #' @description This function uses simulation to perform power analysis. It is designed to explore the power of biological experiments and to suggest an optimal number of experimental variables with reasonable power. The backbone of the function is based on simr package, which fits a fixed effect or mixed effect model based on the observed data and simulates response variables. Users can test the power of different combinations of experimental variables and parameters.
@@ -13,10 +13,11 @@
 #'
 #' @param data Input data
 #' @param condition_column The name of the condition variable (ex a variable with values such as control/case). The input file has to have a corresponding column name
-#' @param experimental_columns Names of variables related to the experimental design, such as "experiment", "plate", and "cell_line".
+#' @param experimental_columns Names of variables related to the experimental design, such as "experiment", "plate", and "cell_line".vThey should be in order, for example, "experiment" should always come first .
 #' @param response_column The name of the variable observed by performing the experiment. ex) intensity.
 #' @param power_curve 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
+#' @param covariate The name of the covariate to control in the regression model
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: Observed variable is continuous. Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param nsimn The number of simulations to run. Default=1000
@@ -46,7 +47,8 @@
 #' @examples levels=1)
 
 
-calculate_power <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical,
+
+calculate_power_covariate <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical, covariate=NA,
                             repeatable_columns = NA, response_is_categorical=FALSE, nsimn=1000, family_p=NULL,
                             levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, na.action="complete", output=NULL){
 
@@ -64,6 +66,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
 
   if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
+  if(!is.na(covariate) & !covariate%in%colnames(data)){ print("covariate should be NA or one of the column names");return(NULL) }
   if(! (is.numeric(nsimn)&&nsimn>0) ){ print("nsimn should be a positive integer");return(NULL) }
   if(sum(target_columns%in%colnames(data))!=length(target_columns) ){ print("target_columns must match column names");return(NULL) }
   if(sum(levels%in%c(0,1))!=length(levels)){ print("levels must be 0 or 1");return(NULL) }
@@ -83,7 +86,9 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
   }else if(na.action=="unique"){
 
-    notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
+    if(is.na(covariate)) notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column, covariate)])) == 0 )
+    else notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
+
 
   }
 
@@ -121,7 +126,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
   colnames(Data)[which(colnames(Data)==condition_column)]="condition_column"
   colnames(Data)[which(colnames(Data)==response_column)]="response_column"
-
+  if(!is.na(covariate)) colnames(Data)[which(colnames(Data)==covariate)]="covariate"
 
 
 
@@ -142,37 +147,71 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   ####### run the formula
   if(length(ICC)==0){
 
-    if(response_is_categorical==FALSE){
-      if(length(experimental_columns)==1){
-        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
-      }else if(length(experimental_columns)==2){
-        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
-      }else if(length(experimental_columns)==3){
-        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
-      }else if(length(experimental_columns)==4){
-        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
-      }else if(length(experimental_columns)==5){
-        lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+    if(is.na(covariate)){
+      if(response_is_categorical==FALSE){
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+        }
+      }else{
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+        }
+
       }
     }else{
-      if(length(experimental_columns)==1){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family_p)
-      }else if(length(experimental_columns)==2){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
-      }else if(length(experimental_columns)==3){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
-      }else if(length(experimental_columns)==4){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
-      }else if(length(experimental_columns)==5){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
-      }
+      if(response_is_categorical==FALSE){
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + covariate + (1 | experimental_column1), data=Data)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::lmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+        }
+      }else{
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + covariate + (1 | experimental_column1), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+        }
 
+      }
     }
+
 
   }else{
 
+      if(is.na(covariate)){
+        lmerFit=stats::lm(response_column ~ condition_column, data=Data)
+      }else{
+        lmerFit=stats::lm(response_column ~ condition_column + covariate, data=Data)
+      }
 
-      lmerFit=stats::lm(response_column ~ condition_column, data=Data)
 
 
 
@@ -225,10 +264,18 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
       cat("\n")
 
 
+      if(is.na(covariate)){
         artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2)
                                        , data=Data,
                                        VarCorr = as.list(varEs), sigma = slmerFit$sigma,
                                        fixef=fixed_effects )
+      }else{
+        artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2)
+                                       , data=Data,
+                                       VarCorr = as.list(varEs), sigma = slmerFit$sigma,
+                                       fixef=fixed_effects )
+      }
+
 
 
 
@@ -241,11 +288,18 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
       print(paste("__________________________________________________________________Estimated variance of the experimental variables:",paste(varEs)))
       cat("\n")
 
-
+      if(covariate==NA){
         artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
                                          (1 | experimental_column3) , data=Data,
                                        VarCorr = as.list(varEs), sigma = slmerFit$sigma,
                                        fixef=fixed_effects )
+      }else{
+        artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) +
+                                         (1 | experimental_column3) , data=Data,
+                                       VarCorr = as.list(varEs), sigma = slmerFit$sigma,
+                                       fixef=fixed_effects )
+      }
+
 
 
 
@@ -259,11 +313,18 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
       print(paste("__________________________________________________________________Estimated variance of the experimental variables:",paste(varEs)))
       cat("\n")
 
-
+      if(covariate==NA){
         artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
                                          (1 | experimental_column3) + (1 | experimental_column4) , data=Data,
                                        VarCorr = as.list(varEs), sigma = slmerFit$sigma,
                                        fixef=fixed_effects )
+      }else{
+        artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) +
+                                         (1 | experimental_column3) + (1 | experimental_column4) , data=Data,
+                                       VarCorr = as.list(varEs), sigma = slmerFit$sigma,
+                                       fixef=fixed_effects )
+      }
+
 
 
     }else if(length(experimental_columns)==5){
@@ -277,10 +338,18 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
       cat("\n")
 
 
+      if(covariate==NA){
         artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) +
                                          (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data,
                                        VarCorr = as.list(varEs), sigma = slmerFit$sigma,
                                        fixef=fixed_effects )
+      }else{
+        artificial_lmer=simr::makeLmer(formula = response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) +
+                                         (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data,
+                                       VarCorr = as.list(varEs), sigma = slmerFit$sigma,
+                                       fixef=fixed_effects )
+      }
+
 
 
 
@@ -442,7 +511,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
     ###### power simulation
 
-    ps=simr::powerSim(extended_target_columns, test=simr::fixed("condition_column"),nsim=nsimn)
+    ps=simr::powerSim(extended_target_columns, test=simr::fixed("condition_column"), nsim=nsimn)
     cat("\n")
     print("__________________________________________________________________Power simulation result:")
     print(ps)

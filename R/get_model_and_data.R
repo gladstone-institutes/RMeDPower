@@ -18,7 +18,7 @@
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
-#' @param family The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
+#' @param family_p The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
 #' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not allowed only in condition, experimental, and response columns. Selecting "complete" removes an entire row when there is one or more missing values, which may affect the distribution of other features.
 #'
 #' @return A list of the linear mixed model result, original data, experimental column names, and residual values
@@ -57,18 +57,18 @@ get_model_and_data <- function(data, condition_column, experimental_columns, res
 
 
 
-  Data=data[notNAindex,]
+  fixed_global_variable_data=data[notNAindex,]
 
 
   cat("\n")
   print("__________________________________________________________________Summary of data:")
-  print(summary(Data))
+  print(summary(fixed_global_variable_data))
   cat("\n")
 
-  colnames_original=colnames(Data)
+  colnames_original=colnames(fixed_global_variable_data)
   experimental_columns_index=NULL
   ####### assign categorical variables
-  if(condition_is_categorical==TRUE) Data[,condition_column]=as.factor(Data[,condition_column])
+  if(condition_is_categorical==TRUE) fixed_global_variable_data[,condition_column]=as.factor(fixed_global_variable_data[,condition_column])
 
   cat("\n")
 
@@ -76,9 +76,9 @@ get_model_and_data <- function(data, condition_column, experimental_columns, res
   nonrepeatable_columns=NULL
 
   for(i in 1:length(experimental_columns)){
-    Data[,experimental_columns[i]]=as.factor(Data[,experimental_columns[i]])
-    experimental_columns_index=c(experimental_columns_index,which(colnames(Data)==experimental_columns[i]))
-    colnames(Data)[experimental_columns_index[i]]=paste("experimental_column",i,sep="")
+    fixed_global_variable_data[,experimental_columns[i]]=as.factor(fixed_global_variable_data[,experimental_columns[i]])
+    experimental_columns_index=c(experimental_columns_index,which(colnames(fixed_global_variable_data)==experimental_columns[i]))
+    colnames(fixed_global_variable_data)[experimental_columns_index[i]]=paste("experimental_column",i,sep="")
 
     if(i!=1&&!experimental_columns[i]%in%repeatable_columns){
       nonrepeatable_columns=c(nonrepeatable_columns, paste("experimental_column",i,sep=""))
@@ -94,8 +94,8 @@ get_model_and_data <- function(data, condition_column, experimental_columns, res
 
   if(length(experimental_columns)>=2){
       for(r in 2:length(experimental_columns)){
-      if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
-        Data[,experimental_columns_index[r]]=paste(Data[,experimental_columns_index[r-1]], Data[,experimental_columns_index[r]],sep="_")
+      if(colnames(fixed_global_variable_data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
+        fixed_global_variable_data[,experimental_columns_index[r]]=paste(fixed_global_variable_data[,experimental_columns_index[r-1]], fixed_global_variable_data[,experimental_columns_index[r]],sep="_")
       }
     }
 
@@ -103,35 +103,35 @@ get_model_and_data <- function(data, condition_column, experimental_columns, res
 
 
 
-  colnames(Data)[which(colnames(Data)==condition_column)]="condition_column"
-  colnames(Data)[which(colnames(Data)==response_column)]="response_column"
+  colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==condition_column)]="condition_column"
+  colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==response_column)]="response_column"
 
 
   ####### run the formula
 
   if(response_is_categorical==FALSE){
     if(length(experimental_columns)==1){
-      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1), data=fixed_global_variable_data)
     }else if(length(experimental_columns)==2){
-      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=fixed_global_variable_data)
     }else if(length(experimental_columns)==3){
-      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=fixed_global_variable_data)
     }else if(length(experimental_columns)==4){
-      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=fixed_global_variable_data)
     }else if(length(experimental_columns)==5){
-      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+      lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=fixed_global_variable_data)
     }
   }else{
     if(length(experimental_columns)==1){
-      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family_p)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1), data=fixed_global_variable_data, family=family_p)
     }else if(length(experimental_columns)==2){
-      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=fixed_global_variable_data, family=family_p)
     }else if(length(experimental_columns)==3){
-      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=fixed_global_variable_data, family=family_p)
     }else if(length(experimental_columns)==4){
-      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=fixed_global_variable_data, family=family_p)
     }else if(length(experimental_columns)==5){
-      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+      lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=fixed_global_variable_data, family=family_p)
     }
   }
 
@@ -150,6 +150,6 @@ get_model_and_data <- function(data, condition_column, experimental_columns, res
 
 
 
-  return(list(lmerFit, Data, colnames(Data)[experimental_columns_index], slmerFit$residuals))
+  return(list(lmerFit, fixed_global_variable_data, colnames(fixed_global_variable_data)[experimental_columns_index], slmerFit$residuals))
 }
 

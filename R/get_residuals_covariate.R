@@ -1,4 +1,4 @@
-#' @title get_residuals
+#' @title get_residuals_covariate
 #'
 #' @description This function retrieve residual values from an lmerFit summary object and plot residual values by condition_column
 #'
@@ -10,9 +10,10 @@
 #'
 #' @param data Input data
 #' @param condition_column Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name
-#' @param experimental_columns Name of variables related to experimental design such as "experiment", "plate", and "cell_line". "experiment" should come always first
+#' @param experimental_columns Name of variables related to experimental design such as "experiment", "plate", and "cell_line". They should be in order, for example, "experiment" should always come first .
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
+#' @param covariate The name of the covariate to control in the regression model
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
 #' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param family_p The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
@@ -21,21 +22,24 @@
 #'
 #' @export
 #'
-#' @examples result=get_residuals(data=RMeDPower_data1,
+#' @examples result=get_residuals_covariate(data=RMeDPower_data1,
 #' @examples condition_column="classification",
 #' @examples experimental_columns=c("experiment", "line"),
 #' @examples response_column="cell_size1",
 #' @examples condition_is_categorical=TRUE,
+#' @examples covariate="covariate",
 #' @examples repeatable_columns = "line",
 #' @examples response_is_categorical=FALSE)
 
 
-get_residuals<-function(data, condition_column, experimental_columns, response_column, condition_is_categorical,
+get_residuals_covariate<-function(data, condition_column, experimental_columns, response_column, condition_is_categorical, covariate=NA,
                         repeatable_columns=NA, response_is_categorical=FALSE, family_p=NULL, na.action="complete"){
 
 
 
   ######input error handler
+  if(!is.na(covariate) & !covariate%in%colnames(data)){ print("covariate should be NA or one of the column names");return(NULL) }
+
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
 
@@ -53,7 +57,8 @@ get_residuals<-function(data, condition_column, experimental_columns, response_c
 
   }else if(na.action=="unique"){
 
-    notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
+    if(is.na(covariate)) notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column, covariate)])) == 0 )
+    else notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
 
   }
 
@@ -106,34 +111,62 @@ get_residuals<-function(data, condition_column, experimental_columns, response_c
 
   colnames(Data)[which(colnames(Data)==condition_column)]="condition_column"
   colnames(Data)[which(colnames(Data)==response_column)]="response_column"
-
+  if(!is.na(covariate)) colnames(Data)[which(colnames(Data)==covariate)]="covariate"
 
 
   ####### run the formula
 
-  if(response_is_categorical==FALSE){
-    if(length(experimental_columns)==1){
-      lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1), data=Data)
-    }else if(length(experimental_columns)==2){
-      lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2), data=Data)
-    }else if(length(experimental_columns)==3){
-      lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
-    }else if(length(experimental_columns)==4){
-      lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
-    }else if(length(experimental_columns)==5){
-      lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+  if(is.na(covariate)){
+    if(response_is_categorical==FALSE){
+      if(length(experimental_columns)==1){
+        lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1), data=Data)
+      }else if(length(experimental_columns)==2){
+        lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2), data=Data)
+      }else if(length(experimental_columns)==3){
+        lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
+      }else if(length(experimental_columns)==4){
+        lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
+      }else if(length(experimental_columns)==5){
+        lmerFit <- lmerTest::lmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+      }
+    }else{
+      if(length(experimental_columns)==1){
+        lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1), data=Data, family=family_p)
+      }else if(length(experimental_columns)==2){
+        lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+      }else if(length(experimental_columns)==3){
+        lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+      }else if(length(experimental_columns)==4){
+        lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+      }else if(length(experimental_columns)==5){
+        lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+      }
     }
   }else{
-    if(length(experimental_columns)==1){
-      lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1), data=Data, family=family_p)
-    }else if(length(experimental_columns)==2){
-      lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
-    }else if(length(experimental_columns)==3){
-      lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
-    }else if(length(experimental_columns)==4){
-      lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
-    }else if(length(experimental_columns)==5){
-      lmerFit <- lme4::glmer(response_column ~  (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+    if(response_is_categorical==FALSE){
+      if(length(experimental_columns)==1){
+        lmerFit <- lmerTest::lmer(response_column ~  covariate + (1 | experimental_column1), data=Data)
+      }else if(length(experimental_columns)==2){
+        lmerFit <- lmerTest::lmer(response_column ~  covariate + (1 | experimental_column1) + (1 | experimental_column2), data=Data)
+      }else if(length(experimental_columns)==3){
+        lmerFit <- lmerTest::lmer(response_column ~  covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data)
+      }else if(length(experimental_columns)==4){
+        lmerFit <- lmerTest::lmer(response_column ~  covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
+      }else if(length(experimental_columns)==5){
+        lmerFit <- lmerTest::lmer(response_column ~  covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+      }
+    }else{
+      if(length(experimental_columns)==1){
+        lmerFit <- lme4::glmer(response_column ~  covariate + (1 | experimental_column1), data=Data, family=family_p)
+      }else if(length(experimental_columns)==2){
+        lmerFit <- lme4::glmer(response_column ~  covariate + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+      }else if(length(experimental_columns)==3){
+        lmerFit <- lme4::glmer(response_column ~  covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+      }else if(length(experimental_columns)==4){
+        lmerFit <- lme4::glmer(response_column ~  covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+      }else if(length(experimental_columns)==5){
+        lmerFit <- lme4::glmer(response_column ~  covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+      }
     }
   }
 
@@ -164,7 +197,7 @@ get_residuals<-function(data, condition_column, experimental_columns, response_c
     boxplot( as.formula( paste0( "residual ~  condition_column") ), data=Data , xlab=condition_column, ylab=paste0(response_column, " Residual Value"), main=NULL)
 
     #95% CI plot
-    plotData = Data %>%group_by(as.factor(condition_column))%>%summarise(mean_residual = mean(residual), se = sd(residual)/sqrt(n()))
+    plotData = Data %>%group_by(as.factor(condition_column))%>%dplyr::summarise(mean_residual = mean(residual), se = sd(residual)/sqrt(n()))
 
     colnames(plotData)[1]="condition"
 
