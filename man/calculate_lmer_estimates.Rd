@@ -12,7 +12,8 @@ calculate_lmer_estimates(
   condition_is_categorical,
   repeatable_columns = NA,
   response_is_categorical = FALSE,
-  family = NULL
+  family_p = NULL,
+  na.action = "complete"
 )
 }
 \arguments{
@@ -30,7 +31,9 @@ calculate_lmer_estimates(
 
 \item{response_is_categorical}{Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).}
 
-\item{family}{The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.}
+\item{family_p}{The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.}
+
+\item{na.action}{"complete": missing data is not allowed in all columns (default), "unique": missing data is not allowed only in condition, experimental, and response columns. Selecting "complete" removes an entire row when there is one or more missing values, which may affect the distribution of other features.}
 }
 \value{
 A linear mixed model result
@@ -39,4 +42,14 @@ A linear mixed model result
 This function performs a linear mixed model analysis using lmer.
 
 Note: The current version does not accept categorical response variables, sample size parameters smaller than the observed samples size
+}
+\examples{
+result=calculate_lmer_estimates(data=RMeDPower_data1,
+condition_column="classification",
+experimental_columns=c("experiment", "line"),
+response_column="cell_size1",
+condition_is_categorical=TRUE,
+repeatable_columns = "line",
+family_p=NULL,
+response_is_categorical=FALSE)
 }
