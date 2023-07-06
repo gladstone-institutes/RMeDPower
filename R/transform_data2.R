@@ -7,6 +7,7 @@
 #' @param condition_column Name of the condition variable (ex variable with values such as control/case). The input file has to have a corresponding column name
 #' @param experimental_columns Name of the variable related to experimental design such as "experiment", "plate", and "cell_line".
 #' @param response_column Name of the variable observed by performing the experiment. ex) intensity.
+#' @param total_column Set this column only when family_p="binomial" and it is equal to the total number of observations (number of cases plus number of controls) for a given number of cases
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param method The method used to detect outliers. "rosner" (default) runs Rosner's test and "cook" runs Cook's distance.
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
@@ -164,7 +165,7 @@ cooks_test<- function (model, fixed_global_variable_data, experimental_columns, 
 }
 
 
-transform_data2<-function(data, condition_column, experimental_columns, response_column, condition_is_categorical, method="rosner",
+transform_data2<-function(data, condition_column, experimental_columns, response_column, total_column, condition_is_categorical, method="rosner",
                          repeatable_columns = NA, response_is_categorical=FALSE, family_p=NULL, alpha=0.05, na.action="complete"){
 
 
@@ -227,15 +228,29 @@ transform_data2<-function(data, condition_column, experimental_columns, response
 
     #run regression
     lms=get_model_and_data(data=data, condition_column=condition_column, experimental_columns=experimental_columns,
-                                 response_column=response_column, condition_is_categorical=condition_is_categorical,
+                                 response_column=response_column, total_column=total_column, condition_is_categorical=condition_is_categorical,
                                  repeatable_columns=repeatable_columns, response_is_categorical=response_is_categorical, family_p=family_p, na.action=na.action)
 
     #run cook
     fixed_global_variable_data<<-lms[[2]]
     family_p<<-family_p
 
-    cooks_result=cooks_test(lms[[1]], lms[[2]], lms[[3]], response_column=response_column, hist_text="raw", response_is_categorical=response_is_categorical)
+    choose_cols <- vector(mode = "character")
+    temp_count <- 0
+    for(c in 1:length(lms[[3]])) {
+      if(length(unique(lms[[2]][[lms[[3]][c]]])) > 2) {
+          temp_count <- temp_count + 1
+          choose_cols[temp_count] <- lms[[3]][c]
+      }
+    }
 
+   if(temp_count > 0) {
+      cooks_result=cooks_test(lms[[1]], lms[[2]], choose_cols, response_column=response_column, hist_text="raw", response_is_categorical=response_is_categorical)
+    }
+    else {
+      print(paste("_________________________________Not enough grouping levels to perform the cook analyses on the experimental factors", sep=""))
+      return()
+    }
     #print(fixed_global_variable_data)
 
     #rm(fixed_global_variable_data)

@@ -14,7 +14,8 @@
 #' @param data Input data
 #' @param condition_column The name of the condition variable (ex a variable with values such as control/case). The input file has to have a corresponding column name
 #' @param experimental_columns Names of variables related to the experimental design, such as "experiment", "plate", and "cell_line".
-#' @param response_column The name of the variable observed by performing the experiment. ex) intensity.
+#' @param response_column The name of the variable observed by performing the experiment. ex) intensity. If family_p="binomial" then this represents the number of cases
+#' @param total_column Set this column only when family_p="binomial" and it is equal to the total number of observations (number of cases plus number of controls) for a given number of cases
 #' @param power_curve 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
@@ -46,7 +47,7 @@
 #' @examples levels=1)
 
 
-calculate_power <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical,
+calculate_power <- function(data, condition_column, experimental_columns, response_column, total_column = NULL, target_columns, power_curve, condition_is_categorical,
                             repeatable_columns = NA, response_is_categorical=FALSE, nsimn=1000, family_p=NULL,
                             levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, na.action="complete", output=NULL){
 
@@ -73,7 +74,10 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   if(!is.null(ICC) & response_is_categorical==TRUE ){ print("ICC-based simulations are not supported when the response is categorical.");return(NULL) }
 
   if(response_is_categorical==TRUE){
-    family_p=switch(family_p, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log") )
+    if(family_p != "negative_binomial")
+      family_p=switch(family_p, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log") )
+    else
+      family_p = list(family = "negative_binomial")
   }
 
 
@@ -122,6 +126,8 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   colnames(Data)[which(colnames(Data)==condition_column)]="condition_column"
   colnames(Data)[which(colnames(Data)==response_column)]="response_column"
 
+  if(!is.null(total_column))
+    colnames(Data)[which(colnames(Data)==total_column)]="total_column"
 
 
 
@@ -154,18 +160,42 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
       }else if(length(experimental_columns)==5){
         lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
       }
-    }else{
-      if(length(experimental_columns)==1){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family_p)
-      }else if(length(experimental_columns)==2){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
-      }else if(length(experimental_columns)==3){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
-      }else if(length(experimental_columns)==4){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
-      }else if(length(experimental_columns)==5){
-        lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
-      }
+    }else if(family_p$family == "binomial"){
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer(cbind(response_column, (total_column - response_column)) ~ condition_column + (1 | experimental_column1), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+        }
+      }else if(family_p$family == "negative_binomial" & !is.null(total_column)){
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + offset(log(total_column)) , data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5) + offset(log(total_column)) , data=Data, family=family_p)
+        }
+      }else{
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+        }
 
     }
 
