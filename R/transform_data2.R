@@ -10,8 +10,8 @@
 #' @param total_column Set this column only when family_p="binomial" and it is equal to the total number of observations (number of cases plus number of controls) for a given number of cases
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param method The method used to detect outliers. "rosner" (default) runs Rosner's test and "cook" runs Cook's distance.
-#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
-#' @param response_is_categorical Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
+#' @param crossed_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
+#' @param error_is_non_normal Default: the observed variable is continuous Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param family_p The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
 #' @param alpha numeric scalar between 0 and 1 indicating the Type I error associated with the test of outliers
 #' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not allowed only in condition, experimental, and response columns. Selecting "complete" removes an entire row when there is one or more missing values, which may affect the distribution of other features.
@@ -20,9 +20,9 @@
 #'
 #' @export
 #'
-#' @examples result=transform_data2(data=data, condition_column="classif", experimental_columns=c("experiment","line"), response_column="feature", condition_is_categorical=TRUE, response_is_categorical=FALSE, alpha=0.05, repeatable_columns = "line", method="cook", na.action="complete")
-#' @examples result=transform_data2(data=data, condition_column="classif", experimental_columns=c("experiment","line"), response_column="feature", condition_is_categorical=TRUE, response_is_categorical=FALSE, alpha=0.05, repeatable_columns = "line", method="cook", na.action="complete")
-#' @examples result=transform_data2(data=data, condition_column="classif", experimental_columns=c("experiment","line"), response_column="feature", condition_is_categorical=TRUE, response_is_categorical=TRUE, family_p="poisson", alpha=0.05, repeatable_columns = "line", method="cook", na.action="complete")
+#' @examples result=transform_data2(data=data, condition_column="classif", experimental_columns=c("experiment","line"), response_column="feature", condition_is_categorical=TRUE, error_is_non_normal=FALSE, alpha=0.05, crossed_columns = "line", method="cook", na.action="complete")
+#' @examples result=transform_data2(data=data, condition_column="classif", experimental_columns=c("experiment","line"), response_column="feature", condition_is_categorical=TRUE, error_is_non_normal=FALSE, alpha=0.05, crossed_columns = "line", method="cook", na.action="complete")
+#' @examples result=transform_data2(data=data, condition_column="classif", experimental_columns=c("experiment","line"), response_column="feature", condition_is_categorical=TRUE, error_is_non_normal=TRUE, family_p="poisson", alpha=0.05, crossed_columns = "line", method="cook", na.action="complete")
 
 
 rosner_test<- function (trait, response_column, alpha, hist_text) {
@@ -97,9 +97,9 @@ rosner_test<- function (trait, response_column, alpha, hist_text) {
  # residuals=lms[[4]]
  # response_column=response_column
  # hist_text="raw"
- # response_is_categorical=response_is_categorical
+ # error_is_non_normal=error_is_non_normal
 
-cooks_test<- function (model, fixed_global_variable_data, experimental_columns, response_column, hist_text, response_is_categorical) {
+cooks_test<- function (model, fixed_global_variable_data, experimental_columns, response_column, hist_text, error_is_non_normal) {
 
 
   cooks_result=lapply(1:length(experimental_columns),
@@ -166,7 +166,7 @@ cooks_test<- function (model, fixed_global_variable_data, experimental_columns, 
 
 
 transform_data2<-function(data, condition_column, experimental_columns, response_column, total_column, condition_is_categorical, method="rosner",
-                         repeatable_columns = NA, response_is_categorical=FALSE, family_p=NULL, alpha=0.05, na.action="complete"){
+                         crossed_columns = NA, error_is_non_normal=FALSE, family_p=NULL, alpha=0.05, na.action="complete"){
 
 
   if(na.action=="complete"){
@@ -186,11 +186,11 @@ transform_data2<-function(data, condition_column, experimental_columns, response
 
   Data_updated=data
 
-  if(response_is_categorical==FALSE){
+  if(error_is_non_normal==FALSE){
     ##raw qq
-    residual=check_normality(data, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
+    residual=check_normality(data, condition_column = condition_column, experimental_columns = experimental_columns,  crossed_columns = crossed_columns,
                              response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                             response_is_categorical = response_is_categorical, image_title="QQplot (raw data)", na.action=na.action)
+                             error_is_non_normal = error_is_non_normal, image_title="QQplot (raw data)", na.action=na.action)
 
   }
 
@@ -216,9 +216,9 @@ transform_data2<-function(data, condition_column, experimental_columns, response
       colnames(Data_updated)[1]=paste0(response_column,"_noOutlier")
 
 
-      check_normality(Data_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
+      check_normality(Data_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  crossed_columns = crossed_columns,
                       response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                      response_is_categorical = FALSE,  image_title="QQplot (outlier excluded Data)", na.action=na.action)
+                      error_is_non_normal = FALSE,  image_title="QQplot (outlier excluded Data)", na.action=na.action)
 
 
     }
@@ -229,7 +229,7 @@ transform_data2<-function(data, condition_column, experimental_columns, response
     #run regression
     lms=get_model_and_data(data=data, condition_column=condition_column, experimental_columns=experimental_columns,
                                  response_column=response_column, total_column=total_column, condition_is_categorical=condition_is_categorical,
-                                 repeatable_columns=repeatable_columns, response_is_categorical=response_is_categorical, family_p=family_p, na.action=na.action)
+                                 crossed_columns=crossed_columns, error_is_non_normal=error_is_non_normal, family_p=family_p, na.action=na.action)
 
     #run cook
     fixed_global_variable_data<<-lms[[2]]
@@ -245,7 +245,7 @@ transform_data2<-function(data, condition_column, experimental_columns, response
     }
 
    if(temp_count > 0) {
-      cooks_result=cooks_test(lms[[1]], lms[[2]], choose_cols, response_column=response_column, hist_text="raw", response_is_categorical=response_is_categorical)
+      cooks_result=cooks_test(lms[[1]], lms[[2]], choose_cols, response_column=response_column, hist_text="raw", error_is_non_normal=error_is_non_normal)
     }
     else {
       print(paste("_________________________________Not enough grouping levels to perform the cook analyses on the experimental factors", sep=""))
@@ -269,10 +269,10 @@ transform_data2<-function(data, condition_column, experimental_columns, response
       Data_updated=cbind(Data_noOutlier[,response_column], Data_updated)
       colnames(Data_updated)[1]=paste0(response_column,"_noOutlier")
 
-      if(response_is_categorical==FALSE){
-        check_normality(Data_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
+      if(error_is_non_normal==FALSE){
+        check_normality(Data_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  crossed_columns = crossed_columns,
                         response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                        response_is_categorical = FALSE,  image_title="QQplot (outlier excluded Data)", na.action=na.action)
+                        error_is_non_normal = FALSE,  image_title="QQplot (outlier excluded Data)", na.action=na.action)
 
       }
 
@@ -291,7 +291,7 @@ transform_data2<-function(data, condition_column, experimental_columns, response
 
 
 
-  if(response_is_categorical==FALSE){
+  if(error_is_non_normal==FALSE){
 
     ########################do the same using log transformed values
 
@@ -323,9 +323,9 @@ transform_data2<-function(data, condition_column, experimental_columns, response
     colnames(Data_updated)[1]=paste0(response_column,"_logTransformed")
 
 
-    residual=check_normality(Data_log, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
+    residual=check_normality(Data_log, condition_column = condition_column, experimental_columns = experimental_columns,  crossed_columns = crossed_columns,
                              response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                             response_is_categorical = FALSE,  image_title="QQplot (log transformed Data)", na.action=na.action)
+                             error_is_non_normal = FALSE,  image_title="QQplot (log transformed Data)", na.action=na.action)
 
 
 
@@ -353,9 +353,9 @@ transform_data2<-function(data, condition_column, experimental_columns, response
         colnames(Data_updated)[1]=paste0(response_column,"_logTransformed_noOutlier")
 
         ###qqplot
-        check_normality(Data_log_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
+        check_normality(Data_log_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  crossed_columns = crossed_columns,
                         response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                        response_is_categorical = FALSE,  image_title="QQplot (log transformed & ouliter excluded Data)", na.action=na.action)
+                        error_is_non_normal = FALSE,  image_title="QQplot (log transformed & ouliter excluded Data)", na.action=na.action)
 
       }
 
@@ -364,13 +364,13 @@ transform_data2<-function(data, condition_column, experimental_columns, response
       #run regression
       lms=get_model_and_data(data=Data_log, condition_column=condition_column, experimental_columns=experimental_columns,
                              response_column=response_column, condition_is_categorical=condition_is_categorical,
-                             repeatable_columns=repeatable_columns, response_is_categorical=response_is_categorical, family_p=family_p, na.action=na.action)
+                             crossed_columns=crossed_columns, error_is_non_normal=error_is_non_normal, family_p=family_p, na.action=na.action)
 
       #run cook
       fixed_global_variable_data<<-lms[[2]]
       family_p<<-family_p
 
-      cooks_result2=cooks_test(lms[[1]],lms[[2]], lms[[3]], response_column=response_column, hist_text="log transformed", response_is_categorical=response_is_categorical)
+      cooks_result2=cooks_test(lms[[1]],lms[[2]], lms[[3]], response_column=response_column, hist_text="log transformed", error_is_non_normal=error_is_non_normal)
 
       #get cutoff
 
@@ -389,9 +389,9 @@ transform_data2<-function(data, condition_column, experimental_columns, response
         colnames(Data_updated)[1]=paste0(response_column,"_logTransformed_noOutlier")
 
 
-        check_normality(Data_log_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  repeatable_columns = repeatable_columns,
+        check_normality(Data_log_noOutlier, condition_column = condition_column, experimental_columns = experimental_columns,  crossed_columns = crossed_columns,
                         response_column = response_column,  condition_is_categorical = condition_is_categorical,
-                        response_is_categorical = FALSE,  image_title="QQplot (log transformed & outlier excluded Data)", na.action=na.action)
+                        error_is_non_normal = FALSE,  image_title="QQplot (log transformed & outlier excluded Data)", na.action=na.action)
 
 
       }

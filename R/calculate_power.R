@@ -3,7 +3,7 @@
 #'
 #' @description This function uses simulation to perform power analysis. It is designed to explore the power of biological experiments and to suggest an optimal number of experimental variables with reasonable power. The backbone of the function is based on simr package, which fits a fixed effect or mixed effect model based on the observed data and simulates response variables. Users can test the power of different combinations of experimental variables and parameters.
 #'
-#' Note: The current version does not accept categorical response variables, sample size parameters smaller than the observed samples size
+#' Note: The current version does not accept sample size parameters smaller than the observed samples size
 #'
 #' @import multtest
 #' @import simr
@@ -18,10 +18,10 @@
 #' @param total_column Set this column only when family_p="binomial" and it is equal to the total number of observations (number of cases plus number of controls) for a given number of cases
 #' @param power_curve 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
-#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
-#' @param response_is_categorical Default: Observed variable is continuous. Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
+#' @param crossed_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
+#' @param error_is_non_normal Default: Error distribution is normal.  TRUE: non-normal , FALSE: normal (default).
 #' @param nsimn The number of simulations to run. Default=1000
-#' @param family_p The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
+#' @param family_p The type of distribution family to specify when the response is categorical. If family is "binomial" then binomial(link="logit") is used, if family is "poisson" then poisson(link="log") is used, if family is "poisson_log" then poisson(link="log") is used.
 #' @param target_columns Name of the experimental parameters to use for the power calculation.
 #' @param levels 1: Amplify the number of corresponding target parameter. 0: Amplify the number of samples from the corresponding target parameter, ex) If target_columns = c("experiment","cell_line") and if you want to expand the number of experiment and sample more cells from each cell line, set levels = c(1,0).
 #' @param max_size Maximum levels or sample sizes to test. Default: the current level or the current sample size x 5. ex) If max_levels = c(10,5), it will test upto 10 experiments and 5 cell lines.
@@ -32,6 +32,7 @@
 #' @param  effect_size If you know the effect size of your condition variable, the effect size can be provided as a parameter. If the effect size is not provided, it will be estimated from your data
 ##### If variance estimates are to be assigned by a user
 #' @param  ICC Intra-Class Coefficients (ICC) for each parameter
+#' @param  alpha Threshold for Type I error
 #' @return A power curve image or a power calculation result printed in a text file
 #'
 #' @export
@@ -42,18 +43,18 @@
 #' @examples target_columns="experiment",
 #' @examples power_curve=1,
 #' @examples condition_is_categorical=TRUE,
-#' @examples repeatable_columns = "line",
-#' @examples response_is_categorical=FALSE,
+#' @examples crossed_columns = "line",
+#' @examples error_is_non_normal=FALSE,
 #' @examples levels=1)
 
 
 calculate_power <- function(data, condition_column, experimental_columns, response_column, total_column = NULL, target_columns, power_curve, condition_is_categorical,
-                            repeatable_columns = NA, response_is_categorical=FALSE, nsimn=1000, family_p=NULL,
-                            levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, na.action="complete", output=NULL){
+                            crossed_columns = NA, error_is_non_normal=FALSE, nsimn=1000, family_p=NULL,
+                            levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, na.action="complete", output=NULL, alpha = 0.05){
 
 
 
-
+  simrOptions(alpha = alpha)
 
 
   ######input error handler
@@ -61,7 +62,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   if(length(power_curve)==0 | !power_curve%in%c(0,1)){ print("power_curve must be 0 or 1");return(NULL) }
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
-  if(!is.na(repeatable_columns)){if(sum(repeatable_columns%in%colnames(data))!=length(repeatable_columns) ){ print("repeatable_columns must match column names");return(NULL) }}
+  if(!is.na(crossed_columns)){if(sum(crossed_columns%in%colnames(data))!=length(crossed_columns) ){ print("crossed_columns must match column names");return(NULL) }}
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
 
   if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
@@ -71,9 +72,9 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   if(!( is.null(max_size) | (is.numeric(max_size)&&sum(max_size>0)==length(max_size)) ) ){print("max_size a positive integer");return(NULL) }
   if(!( is.null(breaks) | (is.numeric(breaks)&&breaks>0) ) ){ print("breaks must be a positive integer");return(NULL) }
   if(!( is.null(effect_size) | (is.numeric(effect_size)&&effect_size>0) ) ){ print("effect_size a positive integer");return(NULL) }
-  if(!is.null(ICC) & response_is_categorical==TRUE ){ print("ICC-based simulations are not supported when the response is categorical.");return(NULL) }
+  if(!is.null(ICC) & error_is_non_normal==TRUE ){ print("ICC-based simulations are not supported when the response error distribution is non-normal.");return(NULL) }
 
-  if(response_is_categorical==TRUE){
+  if(error_is_non_normal==TRUE){
     if(family_p != "negative_binomial")
       family_p=switch(family_p, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log") )
     else
@@ -106,15 +107,15 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
 
 
-  nonrepeatable_columns=NULL
+  noncrossed_columns=NULL
 
   for(i in 1:length(experimental_columns)){
     Data[,experimental_columns[i]]=as.factor(Data[,experimental_columns[i]])
     experimental_columns_index=c(experimental_columns_index,which(colnames(Data)==experimental_columns[i]))
     colnames(Data)[experimental_columns_index[i]]=paste("experimental_column",i,sep="")
 
-    if(i!=1&&!experimental_columns[i]%in%repeatable_columns){
-      nonrepeatable_columns=c(nonrepeatable_columns, paste("experimental_column",i,sep=""))
+    if(i!=1&&!experimental_columns[i]%in%crossed_columns){
+      noncrossed_columns=c(noncrossed_columns, paste("experimental_column",i,sep=""))
     }
 
 
@@ -148,7 +149,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
   ####### run the formula
   if(length(ICC)==0){
 
-    if(response_is_categorical==FALSE){
+    if(error_is_non_normal==FALSE){
       if(length(experimental_columns)==1){
         lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
       }else if(length(experimental_columns)==2){
@@ -461,7 +462,7 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
     if(length(experimental_columns)>=2){
             for(r in 2:length(experimental_columns)){
-        if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
+        if(colnames(Data)[experimental_columns_index[r]]%in%noncrossed_columns){
           attributes(extended_target_columns)$newData[,experimental_columns_index[r]]=paste(attributes(extended_target_columns)$newData[,experimental_columns_index[r-1]],attributes(extended_target_columns)$newData[,experimental_columns_index[r]],sep="_")
         }
       }
@@ -560,9 +561,9 @@ calculate_power <- function(data, condition_column, experimental_columns, respon
 
     if(length(experimental_columns)>=2){
             for(r in 2:length(experimental_columns)){
-        if(experimental_columns[r]%in%nonrepeatable_columns){
-          attributes(extended_target_columns)$newData[nonrepeatable_columns[r]]=paste(attributes(extended_target_columns)$newData[nonrepeatable_columns[r-1]],
-                                                                                      attributes(extended_target_columns)$newData[nonrepeatable_columns[r]],sep="_")
+        if(experimental_columns[r]%in%noncrossed_columns){
+          attributes(extended_target_columns)$newData[noncrossed_columns[r]]=paste(attributes(extended_target_columns)$newData[noncrossed_columns[r-1]],
+                                                                                      attributes(extended_target_columns)$newData[noncrossed_columns[r]],sep="_")
         }
       }
       print(attributes(extended_target_columns)$newData)
