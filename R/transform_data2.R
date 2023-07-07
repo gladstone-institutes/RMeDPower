@@ -99,7 +99,7 @@ rosner_test<- function (trait, response_column, alpha, hist_text) {
  # hist_text="raw"
  # error_is_non_normal=error_is_non_normal
 
-cooks_test<- function (model, fixed_global_variable_data, experimental_columns, response_column, hist_text, error_is_non_normal) {
+cooks_test<- function (model, fixed_global_variable_data, experimental_columns, response_column, hist_text) {
 
 
   cooks_result=lapply(1:length(experimental_columns),
@@ -245,7 +245,7 @@ transform_data2<-function(data, condition_column, experimental_columns, response
     }
 
    if(temp_count > 0) {
-      cooks_result=cooks_test(lms[[1]], lms[[2]], choose_cols, response_column=response_column, hist_text="raw", error_is_non_normal=error_is_non_normal)
+      cooks_result=cooks_test(lms[[1]], lms[[2]], choose_cols, response_column=response_column, hist_text="raw")
     }
     else {
       print(paste("_________________________________Not enough grouping levels to perform the cook analyses on the experimental factors", sep=""))
