@@ -296,6 +296,7 @@ transform_data2<-function(data, condition_column, experimental_columns, response
     ########################do the same using log transformed values
 
     ###log transform
+    print(paste("_________________________________Evaluating log-transformed response variable", sep=""))
 
     Data_log=data
     temp1=Data_log[, response_column]
@@ -370,12 +371,27 @@ transform_data2<-function(data, condition_column, experimental_columns, response
       fixed_global_variable_data<<-lms[[2]]
       family_p<<-family_p
 
-      cooks_result2=cooks_test(lms[[1]],lms[[2]], lms[[3]], response_column=response_column, hist_text="log transformed", error_is_non_normal=error_is_non_normal)
+      choose_cols <- vector(mode = "character")
+      temp_count <- 0
+      for(c in 1:length(lms[[3]])) {
+        if(length(unique(lms[[2]][[lms[[3]][c]]])) > 2) {
+          temp_count <- temp_count + 1
+          choose_cols[temp_count] <- lms[[3]][c]
+        }
+      }
+
+      if(temp_count > 0) {
+        cooks_result2=cooks_test(lms[[1]], lms[[2]], choose_cols, response_column=response_column, hist_text="raw")
+      }
+      else {
+        print(paste("_________________________________Not enough grouping levels to perform the cook analyses on the experimental factors", sep=""))
+        return()
+      }
 
       #get cutoff
 
       #rm(fixed_global_variable_data)
-      rm(family_p)
+      #rm(family_p)
 
       filtering_targets=cooks_result2[[1]]>4/nrow(data)
 

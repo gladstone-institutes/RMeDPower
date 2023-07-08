@@ -15,11 +15,12 @@
 #' @param condition_column The name of the condition variable (ex a variable with values such as control/case). The input file has to have a corresponding column name
 #' @param experimental_columns Names of variables related to the experimental design, such as "experiment", "plate", and "cell_line".vThey should be in order, for example, "experiment" should always come first .
 #' @param response_column The name of the variable observed by performing the experiment. ex) intensity.
+#' @param total_column Set this column only when family_p="binomial" and it is equal to the total number of observations (number of cases plus number of controls) for a given number of cases
 #' @param power_curve 1: Power simulation over a range of sample sizes or levels. 0: Power calculation over a single sample size or a level.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param covariate The name of the covariate to control in the regression model
-#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
-#' @param response_is_categorical Default: Observed variable is continuous. Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
+#' @param crossed_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
+#' @param error_is_non_normal Default: Observed variable is continuous. Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param nsimn The number of simulations to run. Default=1000
 #' @param family_p The type of distribution family to specify when the response is categorical. If family is "binary" then binary(link="log") is used, if family is "poisson" then poisson(link="logit") is used, if family is "poisson_log" then poisson(link=") log") is used.
 #' @param target_columns Name of the experimental parameters to use for the power calculation.
@@ -31,6 +32,7 @@
 ##### If variance estimates should be estimated from data
 #' @param  effect_size If you know the effect size of your condition variable, the effect size can be provided as a parameter. If the effect size is not provided, it will be estimated from your data
 ##### If variance estimates are to be assigned by a user
+#' @param  alpha Threshold for Type I error
 #' @param  ICC Intra-Class Coefficients (ICC) for each parameter
 #' @return A power curve image or a power calculation result printed in a text file
 #'
@@ -42,15 +44,15 @@
 #' @examples target_columns="experiment",
 #' @examples power_curve=1,
 #' @examples condition_is_categorical=TRUE,
-#' @examples repeatable_columns = "line",
-#' @examples response_is_categorical=FALSE,
+#' @examples crossed_columns = "line",
+#' @examples error_is_non_normal=FALSE,
 #' @examples levels=1)
 
 
 
-calculate_power_covariate <- function(data, condition_column, experimental_columns, response_column, target_columns, power_curve, condition_is_categorical, covariate=NA,
-                            repeatable_columns = NA, response_is_categorical=FALSE, nsimn=1000, family_p=NULL,
-                            levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, na.action="complete", output=NULL){
+calculate_power_covariate <- function(data, condition_column, experimental_columns, response_column, total_column = NULL, target_columns, power_curve, condition_is_categorical, covariate=NA,
+                            crossed_columns = NA, error_is_non_normal=FALSE, nsimn=1000, family_p=NULL,
+                            levels=NULL, max_size=NULL, breaks=NULL, effect_size=NULL, ICC=NULL, na.action="complete", output=NULL, alpha =0.05){
 
 
 
@@ -62,7 +64,7 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
   if(length(power_curve)==0 | !power_curve%in%c(0,1)){ print("power_curve must be 0 or 1");return(NULL) }
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
-  if(!is.na(repeatable_columns)){if(sum(repeatable_columns%in%colnames(data))!=length(repeatable_columns) ){ print("repeatable_columns must match column names");return(NULL) }}
+  if(!is.na(crossed_columns)){if(sum(crossed_columns%in%colnames(data))!=length(crossed_columns) ){ print("crossed_columns must match column names");return(NULL) }}
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
 
   if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
@@ -73,10 +75,13 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
   if(!( is.null(max_size) | (is.numeric(max_size)&&sum(max_size>0)==length(max_size)) ) ){print("max_size a positive integer");return(NULL) }
   if(!( is.null(breaks) | (is.numeric(breaks)&&breaks>0) ) ){ print("breaks must be a positive integer");return(NULL) }
   if(!( is.null(effect_size) | (is.numeric(effect_size)&&effect_size>0) ) ){ print("effect_size a positive integer");return(NULL) }
-  if(!is.null(ICC) & response_is_categorical==TRUE ){ print("ICC-based simulations are not supported when the response is categorical.");return(NULL) }
+  if(!is.null(ICC) & error_is_non_normal==TRUE ){ print("ICC-based simulations are not supported when the response is categorical.");return(NULL) }
 
-  if(response_is_categorical==TRUE){
-    family_p=switch(family_p, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log") )
+  if(error_is_non_normal==TRUE){
+    if(family_p != "negative_binomial")
+      family_p=switch(family_p, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log") )
+    else
+      family_p = list(family = "negative_binomial")
   }
 
 
@@ -107,15 +112,15 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
 
 
 
-  nonrepeatable_columns=NULL
+  noncrossed_columns=NULL
 
   for(i in 1:length(experimental_columns)){
     Data[,experimental_columns[i]]=as.factor(Data[,experimental_columns[i]])
     experimental_columns_index=c(experimental_columns_index,which(colnames(Data)==experimental_columns[i]))
     colnames(Data)[experimental_columns_index[i]]=paste("experimental_column",i,sep="")
 
-    if(i!=1&&!experimental_columns[i]%in%repeatable_columns){
-      nonrepeatable_columns=c(nonrepeatable_columns, paste("experimental_column",i,sep=""))
+    if(i!=1&&!experimental_columns[i]%in%crossed_columns){
+      noncrossed_columns=c(noncrossed_columns, paste("experimental_column",i,sep=""))
     }
 
 
@@ -128,6 +133,8 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
   colnames(Data)[which(colnames(Data)==response_column)]="response_column"
   if(!is.na(covariate)) colnames(Data)[which(colnames(Data)==covariate)]="covariate"
 
+  if(!is.null(total_column))
+    colnames(Data)[which(colnames(Data)==total_column)]="total_column"
 
 
   ###### indices of target parameters in experimental variables
@@ -148,7 +155,7 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
   if(length(ICC)==0){
 
     if(is.na(covariate)){
-      if(response_is_categorical==FALSE){
+      if(error_is_non_normal==FALSE){
         if(length(experimental_columns)==1){
           lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
         }else if(length(experimental_columns)==2){
@@ -159,6 +166,30 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
           lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
         }else if(length(experimental_columns)==5){
           lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+        }
+      }else if(family_p$family == "binomial"){
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer(cbind(response_column, (total_column - response_column)) ~ condition_column + (1 | experimental_column1), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+        }
+      }else if(family_p$family == "negative_binomial" & !is.null(total_column)){
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + offset(log(total_column)) , data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5) + offset(log(total_column)) , data=Data, family=family_p)
         }
       }else{
         if(length(experimental_columns)==1){
@@ -175,7 +206,7 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
 
       }
     }else{
-      if(response_is_categorical==FALSE){
+      if(error_is_non_normal==FALSE){
         if(length(experimental_columns)==1){
           lmerFit <- lme4::lmer(response_column ~ condition_column + covariate + (1 | experimental_column1), data=Data)
         }else if(length(experimental_columns)==2){
@@ -186,6 +217,30 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
           lmerFit <- lme4::lmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data)
         }else if(length(experimental_columns)==5){
           lmerFit <- lme4::lmer(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data)
+        }
+      }else if(family_p$family == "binomial"){
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer(cbind(response_column, (total_column - response_column)) ~ condition_column + covariate + (1 | experimental_column1), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3), data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer(cbind(response_column, total_column - response_column) ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5), data=Data, family=family_p)
+        }
+      }else if(family_p$family == "negative_binomial" & !is.null(total_column)){
+        if(length(experimental_columns)==1){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + covariate + (1 | experimental_column1) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==2){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==3){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + offset(log(total_column)) , data=Data, family=family_p)
+        }else if(length(experimental_columns)==4){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + offset(log(total_column)), data=Data, family=family_p)
+        }else if(length(experimental_columns)==5){
+          lmerFit <- lme4::glmer.nb(response_column ~ condition_column + covariate + (1 | experimental_column1) + (1 | experimental_column2) + (1 | experimental_column3) + (1 | experimental_column4) + (1 | experimental_column5) + offset(log(total_column)) , data=Data, family=family_p)
         }
       }else{
         if(length(experimental_columns)==1){
@@ -500,7 +555,7 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
 
     if(length(experimental_columns)>=2){
             for(r in 2:length(experimental_columns)){
-        if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
+        if(colnames(Data)[experimental_columns_index[r]]%in%noncrossed_columns){
           attributes(extended_target_columns)$newData[,experimental_columns_index[r]]=paste(attributes(extended_target_columns)$newData[,experimental_columns_index[r-1]],attributes(extended_target_columns)$newData[,experimental_columns_index[r]],sep="_")
         }
       }
@@ -599,9 +654,9 @@ calculate_power_covariate <- function(data, condition_column, experimental_colum
 
     if(length(experimental_columns)>=2){
             for(r in 2:length(experimental_columns)){
-        if(experimental_columns[r]%in%nonrepeatable_columns){
-          attributes(extended_target_columns)$newData[nonrepeatable_columns[r]]=paste(attributes(extended_target_columns)$newData[nonrepeatable_columns[r-1]],
-                                                                                      attributes(extended_target_columns)$newData[nonrepeatable_columns[r]],sep="_")
+        if(experimental_columns[r]%in%noncrossed_columns){
+          attributes(extended_target_columns)$newData[noncrossed_columns[r]]=paste(attributes(extended_target_columns)$newData[noncrossed_columns[r-1]],
+                                                                                      attributes(extended_target_columns)$newData[noncrossed_columns[r]],sep="_")
         }
       }
       print(attributes(extended_target_columns)$newData)

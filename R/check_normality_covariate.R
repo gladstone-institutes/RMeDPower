@@ -9,8 +9,8 @@
 #' @param response_column The name of the variable observed by performing the experiment. ex) intensity.
 #' @param condition_is_categorical Specify whether the condition variable is categorical. TRUE: Categorical, FALSE: Continuous.
 #' @param covariate The name of the covariate to control in the regression model
-#' @param repeatable_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
-#' @param response_is_categorical Default: Observed variable is continuous. Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
+#' @param crossed_columns Name of experimental variables that may appear repeatedly with the same ID. For example, cell_line C1 may appear in multiple experiments, but plate P1 cannot appear in more than one experiment
+#' @param error_is_non_normal Default: Observed variable is continuous. Categorical response variable will be implemented in the future. TRUE: Categorical , FALSE: Continuous (default).
 #' @param image_title The title of the qq plot
 #' @param na.action "complete": missing data is not allowed in all columns (default), "unique": missing data is not allowed only in condition, experimental, and response columns. Selecting "complete" removes an entire row when there is one or more missing values, which may affect the distribution of other features.
 #'
@@ -19,19 +19,19 @@
 #' @export
 #'
 #' @examples check_normality(data=RMeDPower_data1, condition_column="classification", experimental_columns=c("experiment","line"),
-#' @examples  response_column="cell_size1", condition_is_categorical=TRUE, covariate="covariate", repeatable_columns="line")
+#' @examples  response_column="cell_size1", condition_is_categorical=TRUE, covariate="covariate", crossed_columns="line")
 
 
 
 
 check_normality_covariate<-function(data, condition_column, experimental_columns, response_column,  condition_is_categorical, covariate = NA,
-                          repeatable_columns = NA, response_is_categorical=FALSE, image_title = NULL, na.action="complete"){
+                          crossed_columns = NA, error_is_non_normal=FALSE, image_title = NULL, na.action="complete"){
 
   if(!is.na(covariate) & !covariate%in%colnames(data)){ print("covariate should be NA or one of the column names");return(NULL) }
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
-  if(!is.na(repeatable_columns)){if(sum(repeatable_columns%in%colnames(data))!=length(repeatable_columns) ){ print("repeatable_columns must match column names");return(NULL) }}
+  if(!is.na(crossed_columns)){if(sum(crossed_columns%in%colnames(data))!=length(crossed_columns) ){ print("crossed_columns must match column names");return(NULL) }}
 
 
 
@@ -57,22 +57,22 @@ check_normality_covariate<-function(data, condition_column, experimental_columns
   experimental_columns_index=NULL
   ####### assign categorical variables
   if(condition_is_categorical==TRUE) Data[,condition_column]=as.factor(Data[,condition_column])
-  if(response_is_categorical==TRUE) {
+  if(error_is_non_normal==TRUE) {
     cat("\n")
     print("_________________________________Categorical response variable is not accepted in the current version")}
   cat("\n")
 
 
 
-  nonrepeatable_columns=NULL
+  noncrossed_columns=NULL
 
   for(i in 1:length(experimental_columns)){
     Data[,experimental_columns[i]]=as.factor(Data[,experimental_columns[i]])
     experimental_columns_index=c(experimental_columns_index,which(colnames(Data)==experimental_columns[i]))
     colnames(Data)[experimental_columns_index[i]]=paste("experimental_column",i,sep="")
 
-    if(i!=1&&!experimental_columns[i]%in%repeatable_columns){
-      nonrepeatable_columns=c(nonrepeatable_columns, paste("experimental_column",i,sep=""))
+    if(i!=1&&!experimental_columns[i]%in%crossed_columns){
+      noncrossed_columns=c(noncrossed_columns, paste("experimental_column",i,sep=""))
     }
 
 
@@ -84,7 +84,7 @@ check_normality_covariate<-function(data, condition_column, experimental_columns
 
   if(length(experimental_columns)>=2){
         for(r in 2:length(experimental_columns)){
-      if(colnames(Data)[experimental_columns_index[r]]%in%nonrepeatable_columns){
+      if(colnames(Data)[experimental_columns_index[r]]%in%noncrossed_columns){
         Data[,experimental_columns_index[r]]=paste(Data[,experimental_columns_index[r-1]], Data[,experimental_columns_index[r]],sep="_")
       }
     }
