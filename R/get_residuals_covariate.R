@@ -239,36 +239,43 @@ get_residuals_covariate<-function(data, condition_column, experimental_columns, 
   residuals=slmerFit$residuals
 
 
-    Data = cbind(residuals, Data)
+  Data = cbind(residuals, Data)
 
 
   colnames(Data)[1] = "residual"
-  Data[,"condition_column"]=as.numeric(as.character(Data[,"condition_column"]))
+  #Data[,"condition_column"]=as.numeric(as.character(Data[,"condition_column"]))
+
+  if(is.na(covariate)) {
+    Data_sum <- Data %>%
+      dplyr::group_by(condition_column, experimental_column1) %>%
+      dplyr:summarise(mean_residual1 = mean(residual), med_residual1 = median(residual))
+  }
+  if(!is.na(covariate)){
+    Data_sum <- Data %>%
+      dplyr::group_by(covariate, condition_column, experimental_column1) %>%
+      dplyr::summarise(mean_residual1 = mean(residual), med_residual1 = median(residual))
+  }
+
 
   if(condition_is_categorical==TRUE){
 
-    #boxplot
-    boxplot( as.formula( paste0( "residual ~  condition_column") ), data=Data , xlab=condition_column, ylab=paste0(response_column, " Residual Value"), main=NULL)
-
-    #95% CI plot
-    plotData = Data %>%group_by(as.factor(condition_column))%>%dplyr::summarise(mean_residual = mean(residual), se = sd(residual)/sqrt(n()))
-
-    colnames(plotData)[1]="condition"
-
-    gp=ggplot2::ggplot(plotData,                ### The data frame to use.
-           aes(x = condition,
-               y = mean_residual)) +
-      geom_errorbar(aes(ymin = mean_residual - 1.96*se,
-                        ymax = mean_residual + 1.96*se),
-                    width = 0.05,
-                    size  = 0.5) +
-      geom_point(shape = 15,
-                 size  = 4) +
-      theme_bw() +
-      theme(axis.title   = element_text(face  = "bold")) + ylab("Mean Residual Value") + xlab("Classification")
+    if(!is.na(covariate)) {
+      gp=ggplot2::ggplot(Data_sum, aes(x=condition_column, y=med_residual1, color = covariate)) +
+        geom_boxplot(position = position_dodge(width = 0.7), outlier.shape = NA) +
+        geom_point(position = position_jitterdodge(jitter.width = 0.1,dodge.width = 0.7)) +
+        ylab("median residual") +
+        theme_bw() +
+        theme(axis.title   = element_text(face  = "bold"))
+    }else{
+      gp=ggplot2::ggplot(Data_sum, aes(x=condition_column, y=med_residual1)) +
+        geom_boxplot(position = position_dodge(width = 0.5), outlier.shape = NA) +
+        geom_point() +
+        ylab("median residual") +
+        theme_bw() +
+        theme(axis.title   = element_text(face  = "bold"))
+    }
 
     print(gp)
-
   }else{
 
 

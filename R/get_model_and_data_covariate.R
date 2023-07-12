@@ -45,11 +45,13 @@ get_model_and_data_covariate <- function(data, condition_column, experimental_co
 
   if(error_is_non_normal==TRUE){
     if(family_p != "negative_binomial")
-      family_p=switch(family_p, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log") )
-    else
+      family_p=switch(family_p, "poisson" = poisson(link="log"), "binomial" = binomial(link="logit"), "bionomial_log" = binomial(link="log"), "Gamma_log" = Gamma(link = "log"), "Gamma" = Gamma(link = "inverse"))
+    else{
       family_p = list(family = "negative_binomial")
+    }
   }
 
+  family_p<<-family_p
 
   if(na.action=="complete"){
 
@@ -113,7 +115,7 @@ get_model_and_data_covariate <- function(data, condition_column, experimental_co
 
   colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==condition_column)]="condition_column"
   colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==response_column)]="response_column"
-  if(!is.na(covariate)) colnames(Data)[which(colnames(Data)==covariate)]="covariate"
+  if(!is.na(covariate)) colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==covariate)]="covariate"
 
   if(!is.null(total_column))
     colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==total_column)]="total_column"
