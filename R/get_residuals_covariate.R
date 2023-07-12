@@ -33,7 +33,7 @@
 #' @examples error_is_non_normal=FALSE)
 
 
-get_residuals_covariate<-function(data, condition_column, experimental_columns, response_column, condition_is_categorical, covariate=NA,
+get_residuals_covariate<-function(data, condition_column, experimental_columns, response_column, total_column, condition_is_categorical, covariate=NA,
                         crossed_columns=NA, error_is_non_normal=FALSE, family_p=NULL, na.action="complete"){
 
 
