@@ -18,7 +18,8 @@ Imports:
     simr,
     lmerTest,
     lme4,
-    ggplot2
+    ggplot2,
+    DHARMa
 Suggests: 
     knitr,
     rmarkdown
