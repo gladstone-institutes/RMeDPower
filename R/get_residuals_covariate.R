@@ -248,7 +248,7 @@ get_residuals_covariate<-function(data, condition_column, experimental_columns, 
   if(is.na(covariate)) {
     Data_sum <- Data %>%
       dplyr::group_by(condition_column, experimental_column1) %>%
-      dplyr:summarise(mean_residual1 = mean(residual), med_residual1 = median(residual))
+      dplyr::summarise(mean_residual1 = mean(residual), med_residual1 = median(residual))
   }
   if(!is.na(covariate)){
     Data_sum <- Data %>%
