@@ -30,18 +30,20 @@
 
 
 
-get_model_and_data_covariate <- function(data, condition_column, experimental_columns, response_column, total_column = NULL, condition_is_categorical,  covariate=NA,
-                                     crossed_columns=NA, error_is_non_normal=FALSE, family_p=NULL, na.action="complete"){
+get_model_and_data_covariate <- function(data, condition_column, experimental_columns, response_column, total_column = NULL, condition_is_categorical,  covariate=NULL,
+                                     crossed_columns=NULL, error_is_non_normal=FALSE, family_p=NULL, na.action="complete"){
 
 
 
   ######input error handler
-  if(!is.na(covariate) & !covariate%in%colnames(data)){ print("covariate should be NA or one of the column names");return(NULL) }
+  if(!is.null(covariate) )
+    if(!covariate%in%colnames(data))
+      { print("covariate should be null or one of the column names");return(NULL) }
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
   if(is.null(condition_is_categorical) | !condition_is_categorical%in%c(TRUE,FALSE)){ print("condition_is_categorical must be TRUE or FALSE");return(NULL) }
-  if(!is.na(crossed_columns)){if(sum(crossed_columns%in%colnames(data))!=length(crossed_columns) ){ print("crossed_columns must match column names");return(NULL) }}
+  if(!is.null(crossed_columns)){if(sum(crossed_columns%in%colnames(data))!=length(crossed_columns) ){ print("crossed_columns must match column names");return(NULL) }}
 
   if(error_is_non_normal==TRUE){
     if(family_p != "negative_binomial")
@@ -59,7 +61,7 @@ get_model_and_data_covariate <- function(data, condition_column, experimental_co
 
   }else if(na.action=="unique"){
 
-    if(is.na(covariate)) notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column, covariate)])) == 0 )
+    if(is.null(covariate)) notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column, covariate)])) == 0 )
     else notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
 
 
@@ -115,14 +117,14 @@ get_model_and_data_covariate <- function(data, condition_column, experimental_co
 
   colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==condition_column)]="condition_column"
   colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==response_column)]="response_column"
-  if(!is.na(covariate)) colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==covariate)]="covariate"
+  if(!is.null(covariate)) colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==covariate)]="covariate"
 
   if(!is.null(total_column))
     colnames(fixed_global_variable_data)[which(colnames(fixed_global_variable_data)==total_column)]="total_column"
 
   ####### run the formula
 
-  if(is.na(covariate)){
+  if(is.null(covariate)){
     if(error_is_non_normal==FALSE){
       if(length(experimental_columns)==1){
         lmerFit <- lmerTest::lmer(response_column ~ condition_column + (1 | experimental_column1), data=fixed_global_variable_data)

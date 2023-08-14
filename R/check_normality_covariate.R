@@ -27,11 +27,13 @@
 check_normality_covariate<-function(data, condition_column, experimental_columns, response_column,  condition_is_categorical, covariate = NA,
                           crossed_columns = NA, error_is_non_normal=FALSE, image_title = NULL, na.action="complete"){
 
-  if(!is.na(covariate) & !covariate%in%colnames(data)){ print("covariate should be NA or one of the column names");return(NULL) }
+  if(!is.null(covariate))
+    if(!covariate%in%colnames(data))
+      { print("covariate should be NA or one of the column names");return(NULL) }
   if(!condition_column%in%colnames(data)){ print("condition_column should be one of the column names");return(NULL) }
   if(sum(experimental_columns%in%colnames(data))!=length(experimental_columns) ){ print("experimental_columns must match column names");return(NULL) }
   if(!response_column%in%colnames(data)){  print("response_column should be one of the column names");return(NULL) }
-  if(!is.na(crossed_columns)){if(sum(crossed_columns%in%colnames(data))!=length(crossed_columns) ){ print("crossed_columns must match column names");return(NULL) }}
+  if(!is.null(crossed_columns)){if(sum(crossed_columns%in%colnames(data))!=length(crossed_columns) ){ print("crossed_columns must match column names");return(NULL) }}
 
 
 
@@ -41,7 +43,7 @@ check_normality_covariate<-function(data, condition_column, experimental_columns
 
   }else if(na.action=="unique"){
 
-    if(is.na(covariate)) notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column, covariate)])) == 0 )
+    if(is.null(covariate)) notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column, covariate)])) == 0 )
     else notNAindex=which( rowSums(is.na(data[,c(condition_column, experimental_columns, response_column)])) == 0 )
 
   }
@@ -94,12 +96,12 @@ check_normality_covariate<-function(data, condition_column, experimental_columns
 
   colnames(Data)[which(colnames(Data)==condition_column)]="condition_column"
   colnames(Data)[which(colnames(Data)==response_column)]="response_column"
-  if(!is.na(covariate)) colnames(Data)[which(colnames(Data)==covariate)]="covariate"
+  if(!is.null(covariate)) colnames(Data)[which(colnames(Data)==covariate)]="covariate"
 
 
   ####### run the formula
 
-  if(is.na(covariate)){
+  if(is.null(covariate)){
     if(length(experimental_columns)==1){
       lmerFit <- lme4::lmer(response_column ~ condition_column + (1 | experimental_column1), data=Data)
     }else if(length(experimental_columns)==2){
